@@ -171,3 +171,35 @@ npm run dev
 | Add Attachment | Yes | Yes | - |
 | View Projects | Yes | Yes | Yes |
 | View Tasks | Yes | Yes | Yes |
+
+---
+
+## Build with opencode.ai
+
+This project was built using **opencode.ai** with the **MiniMax** model.
+
+**opencode.ai** is an AI-powered CLI tool that helps developers with software engineering tasks including:
+- Writing, reading, and editing code
+- Searching and navigating codebases
+- Running shell commands
+- Multi-file refactoring
+- Bug fixing and feature implementation
+
+### Model: MiniMax
+
+The MiniMax model provides intelligent assistance for:
+- Understanding project context
+- Implementing features based on natural language descriptions
+- Code generation and refactoring
+- Explaining and debugging code
+
+### How opencode.ai Helped
+
+This application was developed through conversations with opencode.ai:
+- Feature planning and specification
+- Database schema design
+- API route implementation
+- UI component development
+- Bug fixing and refinements
+
+To learn more about opencode.ai, visit: https://opencode.ai
