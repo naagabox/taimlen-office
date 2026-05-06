@@ -49,6 +49,26 @@ export async function PUT(
       },
     })
 
+    // Log attachment change
+    if (attachmentUrl !== undefined && existingTask && attachmentUrl !== existingTask.attachmentUrl) {
+      const oldFileName = existingTask.attachmentUrl ? existingTask.attachmentUrl.split('/').pop() : null
+      const newFileName = attachmentUrl ? attachmentUrl.split('/').pop() : null
+      
+      if (oldFileName !== newFileName) {
+        await prisma.activityLog.create({
+          data: {
+            taskId: task.id,
+            taskTitle: task.title,
+            oldStatus: oldFileName ? `Removed: ${oldFileName}` : "No attachment",
+            newStatus: newFileName ? `Added: ${newFileName}` : "Removed attachment",
+            userId: session.user.id,
+            userName: session.user.name || session.user.email,
+            projectId: id,
+          },
+        })
+      }
+    }
+
     if (status && status !== oldStatus) {
       await prisma.activityLog.create({
         data: {
