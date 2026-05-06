@@ -1,4 +1,8 @@
+"use client"
+
+import { useState } from "react"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
+import { Sidebar } from "@/components/dashboard/sidebar"
 import { Providers } from "@/components/providers"
 
 export const dynamic = "force-dynamic"
@@ -8,11 +12,21 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
   return (
     <Providers>
       <div className="min-h-screen bg-gray-50">
-        <DashboardNav />
-        <main>{children}</main>
+        <DashboardNav sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <main 
+          className="pt-16 transition-all duration-200"
+          style={{ marginLeft: sidebarOpen ? "16rem" : "0" }}
+        >
+          <div className="p-6">
+            {children}
+          </div>
+        </main>
       </div>
     </Providers>
   )

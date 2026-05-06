@@ -4,31 +4,39 @@ import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { 
-  LayoutDashboard, 
-  FolderKanban, 
   LogOut, 
-  User 
+  User,
+  DoorOpen,
+  DoorClosed,
+  Menu,
 } from "lucide-react"
 
-export function DashboardNav() {
+interface DashboardNavProps {
+  sidebarOpen: boolean
+  onToggleSidebar: () => void
+}
+
+export function DashboardNav({ sidebarOpen, onToggleSidebar }: DashboardNavProps) {
   const { data: session } = useSession()
 
   return (
     <header className="border-b bg-white">
       <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onToggleSidebar}
+            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-gray-100"
+            style={{ marginLeft: "-9px" }}
+          >
+            {sidebarOpen ? (
+              <DoorOpen className="h-5 w-5 text-gray-600" />
+            ) : (
+              <DoorClosed className="h-5 w-5 text-gray-600" />
+            )}
+          </button>
           <Link href="/projects" className="text-xl font-bold">
             Timeline Proyek
           </Link>
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/projects"
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              <FolderKanban className="h-4 w-4" />
-              Projects
-            </Link>
-          </nav>
         </div>
         <div className="flex items-center gap-4">
           {session?.user && (
