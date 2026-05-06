@@ -22,7 +22,7 @@ interface Project {
   createdAt: string
   user: { name: string | null; email: string }
   members: { user: { name: string | null; email: string } }[]
-  _count: { tasks: number }
+  _count: { tasks: number; tasksFinished: number }
   currentUserRole: "OWNER" | "EDITOR" | "VIEWER" | null
   canEdit: boolean
   isOwnerOnly: boolean
@@ -321,7 +321,11 @@ function ProjectCard({ project }: { project: Project }) {
             )}
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>{project._count.tasks} tasks</span>
+            {project._count.tasks === 0 ? (
+                <span>0 task</span>
+              ) : (
+                <span>{`${project._count.tasksFinished ?? 0}/${project._count.tasks} task (${project._count.tasksFinished ?? 0} finished, ${project._count.tasks} total)`}</span>
+              )}
             <ArrowRight className="ml-auto h-4 w-4" />
           </div>
         </CardContent>
