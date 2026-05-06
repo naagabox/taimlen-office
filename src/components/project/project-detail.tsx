@@ -60,7 +60,7 @@ function getInitials(name: string | null) {
 export function ProjectDetail({ project, canEdit }: Props) {
 
   return (
-    <div className="mx-auto max-w-full px-6 py-8">
+    <div className="mx-auto max-w-full px-6 py-0">
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
