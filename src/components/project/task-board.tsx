@@ -87,6 +87,12 @@ export function TaskBoard({ project, canEdit }: Props) {
     setTasks(project.tasks.map(t => ({ ...t, status: t.status as TaskStatus })))
   }, [project.tasks])
 
+  useEffect(() => {
+    const handleOpenDialog = () => setTaskDialogOpen(true)
+    window.addEventListener('open-add-task-dialog', handleOpenDialog)
+    return () => window.removeEventListener('open-add-task-dialog', handleOpenDialog)
+  }, [])
+
   const tasksByColumn = COLUMNS.reduce((acc, col) => {
     acc[col.id] = tasks.filter((t) => t.status === col.id).sort((a, b) => a.order - b.order)
     return acc
@@ -245,12 +251,6 @@ export function TaskBoard({ project, canEdit }: Props) {
           </DragOverlay>
         </DndContext>
       </div>
-
-      {canEdit && (
-        <Button variant="outline" className="w-full" onClick={() => setTaskDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />Add Task
-        </Button>
-      )}
 
       <ActivityLog ref={activityLogRef} projectId={project.id} />
 

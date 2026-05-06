@@ -3,10 +3,11 @@
 import { format } from "date-fns"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { Calendar, Users } from "lucide-react"
+import { Calendar, Users, Plus } from "lucide-react"
 import { TaskBoard } from "./task-board"
 
 interface Task {
@@ -87,8 +88,13 @@ export function ProjectDetail({ project, canEdit }: Props) {
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="lg:col-span-10">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Tasks</CardTitle>
+              {canEdit && (
+                <Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent('open-add-task-dialog'))}>
+                  <Plus className="h-4 w-4 mr-1" />Add Task
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <TaskBoard project={project} canEdit={canEdit} />
