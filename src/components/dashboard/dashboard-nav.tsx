@@ -20,7 +20,7 @@ export function DashboardNav({ sidebarOpen, onToggleSidebar }: DashboardNavProps
   const { data: session } = useSession()
 
   return (
-    <header className="border-b bg-white">
+    <header className="border-b bg-white sticky top-0 z-50">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <button

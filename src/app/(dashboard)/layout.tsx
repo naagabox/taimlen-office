@@ -20,8 +20,7 @@ export default function DashboardLayout({
         <DashboardNav sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         <main 
-          className="pt-0 transition-all duration-200"
-          style={{ marginLeft: sidebarOpen ? "16rem" : "0" }}
+          className={`pt-0 transition-all duration-200 ${sidebarOpen ? "md:ml-64" : "md:ml-0"}`}
         >
           <div className="p-6">
             {children}

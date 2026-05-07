@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Plus, Calendar, ArrowRight, Pencil, Trash2, Loader2 } from "lucide-react"
+import { ChartsSection } from "./charts-section"
 
 interface Project {
   id: string
@@ -28,8 +29,25 @@ interface Project {
   isOwnerOnly: boolean
 }
 
+interface BarChartData {
+  day: string
+  date: number
+  finished: number
+  inProgress: number
+  todo: number
+}
+
+interface PieChartData {
+  name: string
+  value: number
+  fill: string
+}
+
 interface Props {
   projects: Project[]
+  barChartData: BarChartData[]
+  pieChartData: PieChartData[]
+  monthYear?: string
 }
 
 function getStatusColor(status: string) {
@@ -53,7 +71,7 @@ function getDaysRemaining(dueDate: string) {
   return days
 }
 
-export function ProjectsList({ projects }: Props) {
+export function ProjectsList({ projects, barChartData, pieChartData, monthYear }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeProjects = projects.filter((p) => p.status === "ACTIVE")
@@ -145,6 +163,12 @@ export function ProjectsList({ projects }: Props) {
           </Button>
         </Link>
       </div>
+
+      {projects.length > 0 && (
+        <div className="mb-8">
+          <ChartsSection barChartData={barChartData} pieChartData={pieChartData} monthYear={monthYear} />
+        </div>
+      )}
 
       {projects.length === 0 ? (
         <Card>
