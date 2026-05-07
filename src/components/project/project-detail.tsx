@@ -79,10 +79,10 @@ export function ProjectDetail({ project, canEdit }: Props) {
 
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
           <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
         </div>
-        {project.description && <p className="mt-1 text-gray-600">{project.description}</p>}
+        {project.description && <p className="mt-1 text-gray-600 dark:text-gray-300">{project.description}</p>}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-12">
@@ -114,7 +114,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
               <p className="text-2xl font-semibold">
                 {format(new Date(project.dueDate), "MMM d, yyyy")}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {format(new Date(project.dueDate), "EEEE")}
               </p>
             </CardContent>
@@ -134,7 +134,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
                 </Avatar>
                 <div className="text-sm">
                   <p className="font-medium">{project.user.name}</p>
-                  <p className="text-gray-500">Owner</p>
+                  <p className="text-gray-500 dark:text-gray-400">Owner</p>
                 </div>
               </div>
               {project.members.map((member) => (
@@ -144,7 +144,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
                   </Avatar>
                   <div className="text-sm">
                     <p className="font-medium">{member.user.name}</p>
-                    <p className="text-gray-500">{member.role}</p>
+                    <p className="text-gray-500 dark:text-gray-400">{member.role}</p>
                   </div>
                 </div>
               ))}

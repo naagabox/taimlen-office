@@ -27,7 +27,7 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
         />
       )}
       <aside 
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-white transition-transform duration-200 ${
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-white dark:bg-gray-800 transition-transform duration-200 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -42,8 +42,8 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
                   href={item.href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive 
-                      ? "bg-gray-100 text-gray-900" 
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white" 
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -53,9 +53,9 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
             })}
           </div>
 
-          <div className="mt-auto flex flex-col gap-2 border-t pt-4">
+          <div className="mt-auto flex flex-col gap-2 border-t pt-4 dark:border-gray-700">
             {session?.user && (
-              <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300">
                 <User className="h-4 w-4" />
                 <span className="truncate">{session.user.name || session.user.email}</span>
               </div>
@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
             <Button
               variant="ghost"
               size="sm"
-              className="justify-start px-3"
+              className="justify-start px-3 text-gray-600 dark:text-gray-300"
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
               <LogOut className="mr-2 h-4 w-4" />

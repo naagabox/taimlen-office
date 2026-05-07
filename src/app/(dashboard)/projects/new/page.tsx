@@ -14,7 +14,7 @@ export default async function NewProjectPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Create New Project</h1>
+      <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">Create New Project</h1>
       <NewProjectForm />
     </div>
   )

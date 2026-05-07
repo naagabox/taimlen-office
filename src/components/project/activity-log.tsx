@@ -106,7 +106,7 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
     return (
       <div className="border-t pt-4 mt-4">
         <Button variant="ghost" size="sm" onClick={handleToggle} className="w-full justify-between">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
             <History className="h-4 w-4" />
             Activity Log
           </div>
@@ -119,7 +119,7 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
   return (
     <div className="border-t pt-4 mt-4">
       <Button variant="ghost" size="sm" onClick={handleToggle} className="w-full justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+        <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
           <History className="h-4 w-4" />
           Activity Log {total > 0 && `(${total})`}
         </div>
@@ -133,13 +133,13 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
               <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           ) : activities.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">No activity yet</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No activity yet</p>
           ) : (
             <ScrollArea className="h-[150px] pr-4">
               <div className="space-y-2 text-sm">
                 {activities.map((activity) => (
-                  <div key={activity.id} className="text-gray-600">
-                    <span className="text-gray-400 text-xs">
+                  <div key={activity.id} className="text-gray-600 dark:text-gray-300">
+                    <span className="text-gray-400 dark:text-gray-500 text-xs">
                       {format(new Date(activity.createdAt), "HH:mm")}
                     </span>{" "}
                     {getActivityMessage(activity)}

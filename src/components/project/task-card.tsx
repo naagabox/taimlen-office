@@ -43,7 +43,7 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-lg border p-3 shadow-sm border-l-4 ${getCardColor(statusId)} ${
+      className={`bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-3 shadow-sm border-l-4 ${getCardColor(statusId)} ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -55,7 +55,7 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
         >
           <GripVertical className="h-4 w-4 text-gray-400" />
         </div>
-        <span className="flex-1 text-sm">{task.title}</span>
+        <span className="flex-1 text-sm text-gray-900 dark:text-white">{task.title}</span>
         {task.attachmentUrl && (
           <a
             href={task.attachmentUrl}

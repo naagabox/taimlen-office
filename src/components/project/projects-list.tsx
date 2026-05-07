@@ -153,8 +153,8 @@ export function ProjectsList({ projects, barChartData, pieChartData, monthYear }
     <div className="mx-auto max-w-6xl px-6 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="mt-1 text-gray-600">Manage and track your projects</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-300">Manage and track your projects</p>
         </div>
         <Link href="/projects/new">
           <Button>
@@ -173,7 +173,7 @@ export function ProjectsList({ projects, barChartData, pieChartData, monthYear }
       {projects.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-500">No projects yet. Create your first project!</p>
+            <p className="text-gray-500 dark:text-gray-400">No projects yet. Create your first project!</p>
             <Link href="/projects/new">
               <Button className="mt-4">
                 <Plus className="mr-2 h-4 w-4" />
@@ -199,7 +199,7 @@ export function ProjectsList({ projects, barChartData, pieChartData, monthYear }
 
           {activeProjects.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                 Active ({activeProjects.length})
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -333,7 +333,7 @@ function ProjectCard({ project }: { project: Project }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               <span>{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
@@ -344,7 +344,7 @@ function ProjectCard({ project }: { project: Project }) {
               </span>
             )}
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-500">
+          <div className="mt-4 flex items-center text-sm text-gray-500 dark:text-gray-400">
             {project._count.tasks === 0 ? (
                 <span>0 task</span>
               ) : (
