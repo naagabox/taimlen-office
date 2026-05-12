@@ -5,13 +5,12 @@ import { signOut, useSession } from "next-auth/react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { 
-  LogOut, 
-  User,
   DoorOpen,
   DoorClosed,
   Sun,
   Moon,
 } from "lucide-react"
+import { UserAvatarIcon } from "@/components/icons/UserAvatarIcon"
 
 interface DashboardNavProps {
   sidebarOpen: boolean
@@ -42,12 +41,6 @@ export function DashboardNav({ sidebarOpen, onToggleSidebar }: DashboardNavProps
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          {session?.user && (
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <User className="h-4 w-4" />
-              <span>{session.user.name || session.user.email}</span>
-            </div>
-          )}
           <Button
             variant="ghost"
             size="icon"
@@ -56,14 +49,14 @@ export function DashboardNav({ sidebarOpen, onToggleSidebar }: DashboardNavProps
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
+          {session?.user && (
+            <div className="flex items-center gap-2">
+              <UserAvatarIcon 
+                src={session.user.image} 
+                className="h-5 w-5" 
+              />
+            </div>
+          )}
         </div>
       </div>
     </header>

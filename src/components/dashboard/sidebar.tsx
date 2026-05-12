@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 
 const menuItems = [
-  { href: "/projects", icon: FolderKanban, label: "Projects" },
+  { href: "/projects", icon: FolderKanban, label: "PDCA Board" },
 ]
 
 export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {

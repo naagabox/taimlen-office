@@ -154,7 +154,7 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
     <div className="mx-auto max-w-full px-6 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PDCA Board</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-300">Manage and track your projects</p>
         </div>
         <Link href="/projects/new">
