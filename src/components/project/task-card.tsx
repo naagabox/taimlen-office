@@ -39,6 +39,8 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
     transition,
   }
 
+  const attachmentCount = task.attachments?.length || 0
+
   return (
     <div
       ref={setNodeRef}
@@ -56,16 +58,22 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
           <GripVertical className="h-4 w-4 text-gray-400" />
         </div>
         <span className="flex-1 text-sm text-gray-900 dark:text-white">{task.title}</span>
-        {task.attachmentUrl && (
-          <a
-            href={task.attachmentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3 w-3" />
-          </a>
+        {attachmentCount > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-500">{attachmentCount}</span>
+            <a
+              href={task.attachments?.[0]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            {attachmentCount > 1 && (
+              <span className="text-xs text-gray-400">+{attachmentCount - 1}</span>
+            )}
+          </div>
         )}
         {canEdit && (
           <div className="flex gap-1">

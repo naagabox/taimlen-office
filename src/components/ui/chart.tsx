@@ -40,7 +40,7 @@ function useChart() {
 }
 
 function ChartContainer({
-  id,
+  id: explicitId,
   className,
   children,
   config,
@@ -55,9 +55,9 @@ function ChartContainer({
     width: number
     height: number
   }
+  id?: string
 }) {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const chartId = `chart-${explicitId || "default"}`
 
   return (
     <ChartContext.Provider value={{ config }}>

@@ -37,7 +37,7 @@ const chartConfig: ChartConfig = {
     color: "hsl(221, 83%, 53%)",
   },
   todo: {
-    label: "Todo",
+    label: "To Do",
     color: "hsl(215, 20%, 65%)",
   },
 }
@@ -51,45 +51,24 @@ export function TaskBarChart({ data, monthYear }: TaskBarChartProps) {
   return (
     <div className="w-full">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Task Distribution This Week</h3>
+        <h3 className="text-lg font-semibold">Task Distribution This Month</h3>
         {monthYear && (
           <span className="text-sm text-muted-foreground">{monthYear}</span>
         )}
       </div>
-      <ChartContainer config={chartConfig} className="h-[270px] w-full">
-        <BarChart data={data} stackOffset="sign" barCategoryGap="20%">
+      <ChartContainer config={chartConfig} className="h-[288px] w-full">
+        <BarChart data={data} stackOffset="sign" barSize={16} margin={{ top: 10, right: 20, bottom: 30, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis
-            dataKey="day"
+            dataKey="date"
+            type="number"
+            domain={[1, 31]}
             tickLine={false}
-            tickMargin={16}
+            tickMargin={6}
             axisLine={false}
-            className="text-xs fill-muted-foreground"
-            tick={({ x, y, payload }) => {
-              const dayData = data.find(d => d.day === payload.value)
-              return (
-                <g transform={`translate(${x},${y})`}>
-                  <text
-                    x={0}
-                    y={0}
-                    dy={-10}
-                    textAnchor="middle"
-                    className="fill-foreground text-xs font-medium"
-                  >
-                    {payload.value}
-                  </text>
-                  <text
-                    x={0}
-                    y={0}
-                    dy={12}
-                    textAnchor="middle"
-                    className="fill-muted-foreground text-xs"
-                  >
-                    {dayData?.date}
-                  </text>
-                </g>
-              )
-            }}
+            className="text-[10px] fill-muted-foreground"
+            tickCount={31}
+            interval={0}
           />
           <YAxis
             tickLine={false}
@@ -121,7 +100,7 @@ export function TaskBarChart({ data, monthYear }: TaskBarChartProps) {
           />
         </BarChart>
       </ChartContainer>
-      <div className="mt-4 flex items-center justify-center gap-6">
+      <div className="mt-[-5px] flex items-center justify-center gap-6">
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-sm bg-green-600" />
           <span className="text-sm text-muted-foreground">Finished ({data.reduce((acc, d) => acc + d.finished, 0)})</span>
@@ -132,11 +111,11 @@ export function TaskBarChart({ data, monthYear }: TaskBarChartProps) {
         </div>
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-sm bg-gray-400" />
-          <span className="text-sm text-muted-foreground">Todo ({data.reduce((acc, d) => acc + d.todo, 0)})</span>
+          <span className="text-sm text-muted-foreground">To Do ({data.reduce((acc, d) => acc + d.todo, 0)})</span>
         </div>
       </div>
       {totalTasks === 0 && (
-        <p className="mt-4 text-center text-sm text-muted-foreground">No tasks this week</p>
+        <p className="mt-4 text-center text-sm text-muted-foreground">No tasks this month</p>
       )}
     </div>
   )

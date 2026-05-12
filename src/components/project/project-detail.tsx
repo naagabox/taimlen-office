@@ -18,7 +18,7 @@ interface Task {
   completed: boolean
   status: "NOT_STARTED" | "IN_PROGRESS" | "FINISHED"
   order: number
-  attachmentUrl: string | null
+  attachments: string[] | null
 }
 
 interface Member {

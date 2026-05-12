@@ -55,7 +55,7 @@ export async function POST(
         oldStatus: null,
         newStatus: "NOT_STARTED",
         userId: session.user.id,
-        userName: session.user.name || session.user.email,
+        userName: session.user.name || session.user.email || "Unknown",
         projectId: id,
       },
     })

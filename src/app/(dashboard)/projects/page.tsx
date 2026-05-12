@@ -2,8 +2,10 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
-import { TaskStatus } from "@prisma/client"
+import { Prisma, TaskStatus } from "@prisma/client"
+import { Suspense } from "react"
 import { ProjectsList } from "@/components/project/projects-list"
+import { Loader2 } from "lucide-react"
 
 function getStartOfWeek(date: Date): Date {
   const d = new Date(date)
@@ -22,18 +24,31 @@ function getEndOfWeek(date: Date): Date {
   return end
 }
 
-function getDayName(dayIndex: number): string {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-  return days[dayIndex]
+function getStartOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function getEndOfMonth(date: Date): Date {
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+  end.setHours(23, 59, 59, 999)
+  return end
 }
 
 export const dynamic = "force-dynamic"
 
-export default async function ProjectsPage() {
+type Props = {
+  searchParams: Promise<{ edit?: string; delete?: string }>
+}
+
+export default async function ProjectsPage(props: Props) {
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {
-    return <ProjectsList projects={[]} barChartData={[]} pieChartData={[]} />
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+        <ProjectsList projects={[]} barChartData={[]} pieChartData={[]} searchParams={props.searchParams} />
+      </Suspense>
+    )
   }
 
   const projectWhereClause = {
@@ -58,87 +73,77 @@ export default async function ProjectsPage() {
     orderBy: { dueDate: "asc" },
   })
 
-  const startOfWeek = getStartOfWeek(new Date())
-  const endOfWeek = getEndOfWeek(new Date())
+  const startOfMonth = getStartOfMonth(new Date())
+  const endOfMonth = getEndOfMonth(new Date())
 
-  const tasksThisWeek = await prisma.task.groupBy({
+  const tasksThisMonth = await prisma.task.groupBy({
     by: ["createdAt", "status"],
     where: {
       project: projectWhereClause,
       createdAt: {
-        gte: startOfWeek,
-        lte: endOfWeek,
+        gte: startOfMonth,
+        lte: endOfMonth,
       },
     },
     _count: true,
   })
 
-  const [tasksWithAttachment, tasksWithoutAttachment, tasksToDo] = await Promise.all([
-    prisma.task.count({
-      where: {
-        project: projectWhereClause,
-        attachmentUrl: { not: null },
-      },
-    }),
-    prisma.task.count({
-      where: {
-        project: projectWhereClause,
-        attachmentUrl: null,
-      },
-    }),
-    prisma.task.count({
-      where: {
-        project: projectWhereClause,
-        status: TaskStatus.NOT_STARTED,
-      },
-    }),
-  ])
+  const tasksToDo = await prisma.task.count({
+    where: {
+      project: projectWhereClause,
+      status: TaskStatus.NOT_STARTED,
+    },
+  })
 
-  const dayData: { [key: string]: { finished: number; inProgress: number; todo: number } } = {
-    Mon: { finished: 0, inProgress: 0, todo: 0 },
-    Tue: { finished: 0, inProgress: 0, todo: 0 },
-    Wed: { finished: 0, inProgress: 0, todo: 0 },
-    Thu: { finished: 0, inProgress: 0, todo: 0 },
-    Fri: { finished: 0, inProgress: 0, todo: 0 },
-    Sat: { finished: 0, inProgress: 0, todo: 0 },
-    Sun: { finished: 0, inProgress: 0, todo: 0 },
-  }
+  const allProjectTasks = await prisma.task.findMany({
+    where: { project: projectWhereClause },
+    select: { attachments: true },
+  })
 
-  for (const task of tasksThisWeek) {
+  const tasksWithAttachment = allProjectTasks.filter(
+    (task) => task.attachments !== null && Array.isArray(task.attachments) && (task.attachments as unknown[]).length > 0
+  ).length
+
+  const tasksWithoutAttachment = allProjectTasks.filter(
+    (task) => task.attachments === null || (Array.isArray(task.attachments) && (task.attachments as unknown[]).length === 0)
+  ).length
+
+  const dayData: { [key: number]: { finished: number; inProgress: number; todo: number } } = {}
+
+  for (const task of tasksThisMonth) {
     const taskDate = new Date(task.createdAt)
-    const dayName = getDayName(taskDate.getDay())
+    const dateKey = taskDate.getDate()
     
-    if (dayName in dayData) {
-      if (task.status === TaskStatus.FINISHED) {
-        dayData[dayName].finished += task._count
-      } else if (task.status === TaskStatus.IN_PROGRESS) {
-        dayData[dayName].inProgress += task._count
-      } else if (task.status === TaskStatus.NOT_STARTED) {
-        dayData[dayName].todo += task._count
-      }
+    if (!dayData[dateKey]) {
+      dayData[dateKey] = { finished: 0, inProgress: 0, todo: 0 }
+    }
+    
+    if (task.status === TaskStatus.FINISHED) {
+      dayData[dateKey].finished += task._count
+    } else if (task.status === TaskStatus.IN_PROGRESS) {
+      dayData[dateKey].inProgress += task._count
+    } else if (task.status === TaskStatus.NOT_STARTED) {
+      dayData[dateKey].todo += task._count
     }
   }
 
-  const dayOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-  const getDateForDay = (dayName: string): number => {
-    const dayIndex = dayOrder.indexOf(dayName)
-    const date = new Date(startOfWeek)
-    date.setDate(date.getDate() + dayIndex)
-    return date.getDate()
-  }
-  const monthYear = startOfWeek.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-  
-  const barChartData = dayOrder.map((day) => ({
-    day,
-    date: getDateForDay(day),
-    finished: dayData[day].finished,
-    inProgress: dayData[day].inProgress,
-    todo: dayData[day].todo,
-  }))
+  const daysInMonth = endOfMonth.getDate()
+  const barChartData = Array.from({ length: daysInMonth }, (_, i) => {
+    const date = i + 1
+    return {
+      day: date.toString(),
+      date: date,
+      finished: dayData[date]?.finished || 0,
+      inProgress: dayData[date]?.inProgress || 0,
+      todo: dayData[date]?.todo || 0,
+    }
+  })
+
+  const monthYear = startOfMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
   const pieChartData = [
     { name: "Attached", value: tasksWithAttachment, fill: "#22c55e" },
-    { name: "Not Attached", value: tasksWithoutAttachment, fill: "#94a3b8" },
+    { name: "Not Yet", value: tasksWithoutAttachment, fill: "#94a3b8" },
     { name: "To Do", value: tasksToDo, fill: "#f59e0b" },
   ]
 
@@ -174,5 +179,9 @@ export default async function ProjectsPage() {
     }
   })
 
-  return <ProjectsList projects={serializedProjects} barChartData={barChartData} pieChartData={pieChartData} monthYear={monthYear} />
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <ProjectsList projects={serializedProjects} barChartData={barChartData} pieChartData={pieChartData} monthYear={monthYear} searchParams={props.searchParams} />
+    </Suspense>
+  )
 }

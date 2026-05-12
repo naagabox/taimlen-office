@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense, use } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Plus, Calendar, ArrowRight, Pencil, Trash2, Loader2 } from "lucide-react"
 import { ChartsSection } from "./charts-section"
 
@@ -48,6 +48,7 @@ interface Props {
   barChartData: BarChartData[]
   pieChartData: PieChartData[]
   monthYear?: string
+  searchParams: Promise<{ edit?: string; delete?: string }>
 }
 
 function getStatusColor(status: string) {
@@ -71,9 +72,9 @@ function getDaysRemaining(dueDate: string) {
   return days
 }
 
-export function ProjectsList({ projects, barChartData, pieChartData, monthYear }: Props) {
+function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, searchParams: searchParamsProp }: Props) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = use(searchParamsProp)
   const activeProjects = projects.filter((p) => p.status === "ACTIVE")
   const completedProjects = projects.filter((p) => p.status === "COMPLETED")
   const overdueProjects = projects.filter((p) => p.status === "OVERDUE")
@@ -83,8 +84,8 @@ export function ProjectsList({ projects, barChartData, pieChartData, monthYear }
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const editId = searchParams.get("edit")
-    const deleteId = searchParams.get("delete")
+    const editId = searchParams?.edit
+    const deleteId = searchParams?.delete
     
     if (editId) {
       const project = projects.find((p) => p.id === editId)
@@ -150,7 +151,7 @@ export function ProjectsList({ projects, barChartData, pieChartData, monthYear }
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-full px-6 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
@@ -293,7 +294,9 @@ function ProjectCard({ project }: { project: Project }) {
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg pr-2">{project.name}</CardTitle>
+            <CardTitle className="text-lg pr-2 truncate">
+              {project.name.length > 30 ? project.name.slice(0, 30) + "..." : project.name}
+            </CardTitle>
             <div className="flex items-center gap-1 flex-shrink-0">
               {project.canEdit && showActions && (
                 <Button
@@ -323,26 +326,34 @@ function ProjectCard({ project }: { project: Project }) {
                   <Trash2 className="h-3 w-3" />
                 </Button>
               )}
-              <Badge className={getStatusColor(project.status)}>
-                {project.status}
-              </Badge>
+              
             </div>
           </div>
           <CardDescription className="line-clamp-2">
-            {project.description || "No description"}
+            {project.description 
+              ? (project.description.length > 30 ? project.description.slice(0, 30) + "..." : project.description)
+              : "No description"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               <span>{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
             </div>
-            {project.status === "ACTIVE" && (
-              <span className={isUrgent ? "text-red-500 font-medium" : ""}>
-                {daysLeft > 0 ? `${daysLeft} days left` : "Due today"}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {project.status === "OVERDUE" && (
+                <Badge className="bg-red-500 text-white">OVERDUE</Badge>
+              )}
+              {project.status === "ACTIVE" && (
+                <>
+                  <span className={isUrgent ? "text-red-500 font-medium" : ""}>
+                    {daysLeft > 0 ? `${daysLeft} days left` : "Due today"}
+                  </span>
+                  <Badge className="bg-blue-500 text-white">ACTIVE</Badge>
+                </>
+              )}
+            </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-500 dark:text-gray-400">
             {project._count.tasks === 0 ? (
@@ -355,5 +366,13 @@ function ProjectCard({ project }: { project: Project }) {
         </CardContent>
       </Card>
     </Link>
+  )
+}
+
+export function ProjectsList(props: Props) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+      <ProjectsListInner {...props} />
+    </Suspense>
   )
 }

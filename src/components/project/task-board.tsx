@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Loader2, Pencil, GripVertical, Link, ExternalLink, Trash2 } from "lucide-react"
+import { Plus, Loader2, Pencil, GripVertical, Link, ExternalLink, Trash2, X } from "lucide-react"
 import { TaskCard } from "./task-card"
 import { TaskColumn } from "./task-column"
 import { ActivityLog } from "./activity-log"
@@ -37,7 +38,7 @@ export interface Task {
   completed: boolean
   status: TaskStatus
   order: number
-  attachmentUrl: string | null
+  attachments: string[] | null
 }
 
 interface Member {
@@ -75,6 +76,7 @@ export function TaskBoard({ project, canEdit }: Props) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState("")
+  const [newAttachmentUrl, setNewAttachmentUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const activityLogRef = useRef<{ refresh: () => void }>(null)
 
@@ -185,7 +187,8 @@ export function TaskBoard({ project, canEdit }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           title: editingTask.title,
-          attachmentUrl: editingTask.attachmentUrl || null,
+          description: editingTask.description || null,
+          attachments: editingTask.attachments || null,
         }),
       })
       if (res.ok) {
@@ -278,7 +281,7 @@ export function TaskBoard({ project, canEdit }: Props) {
       </Dialog>
 
       <Dialog open={!!editingTask} onOpenChange={(open) => !open && setEditingTask(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
@@ -292,27 +295,79 @@ export function TaskBoard({ project, canEdit }: Props) {
                 placeholder="Enter task title"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="editTaskDescription">Description</Label>
+              <Textarea
+                id="editTaskDescription"
+                value={editingTask?.description || ""}
+                onChange={(e) => editingTask && setEditingTask({...editingTask, description: e.target.value})}
+                placeholder="Enter task description"
+                rows={3}
+              />
+            </div>
             {editingTask?.status === "FINISHED" && (
               <div className="space-y-2">
-                <Label htmlFor="editAttachmentUrl">Attachment URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="editAttachmentUrl"
-                    value={editingTask?.attachmentUrl || ""}
-                    onChange={(e) => editingTask && setEditingTask({...editingTask, attachmentUrl: e.target.value})}
-                    placeholder="https://..."
-                    className="flex-1"
-                  />
-                  {editingTask?.attachmentUrl && (
-                    <a
-                      href={editingTask.attachmentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                <Label>Attachments</Label>
+                <div className="space-y-2">
+                  {editingTask?.attachments?.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-500 hover:text-blue-600 break-all"
+                      >
+                        {url}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-600 shrink-0"
+                        onClick={() => {
+                          if (editingTask) {
+                            const newAttachments = editingTask.attachments?.filter((_, i) => i !== index) || []
+                            setEditingTask({ ...editingTask, attachments: newAttachments })
+                          }
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newAttachmentUrl}
+                      onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                      placeholder="Add attachment URL..."
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          if (newAttachmentUrl.trim() && editingTask) {
+                            const updatedAttachments = [...(editingTask.attachments || []), newAttachmentUrl.trim()]
+                            setEditingTask({ ...editingTask, attachments: updatedAttachments })
+                            setNewAttachmentUrl("")
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (newAttachmentUrl.trim() && editingTask) {
+                          const updatedAttachments = [...(editingTask.attachments || []), newAttachmentUrl.trim()]
+                          setEditingTask({ ...editingTask, attachments: updatedAttachments })
+                          setNewAttachmentUrl("")
+                        }
+                      }}
+                      disabled={!newAttachmentUrl.trim()}
                     >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
