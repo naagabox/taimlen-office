@@ -127,3 +127,14 @@
     @apply font-sans;
   }
 }
+
+.scrollbar-hide [data-slot="scroll-area-scrollbar"] [data-slot="scroll-area-thumb"] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scrollbar-show [data-slot="scroll-area-scrollbar"] [data-slot="scroll-area-thumb"],
+[data-slot="scroll-area-scrollbar"]:hover [data-slot="scroll-area-thumb"] {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
