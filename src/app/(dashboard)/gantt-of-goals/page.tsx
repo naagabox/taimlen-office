@@ -48,18 +48,18 @@ function computePhases(tasks) {
 }
 
 const SAMPLE = [
-  { id: "1",  phase: "Phase 1", task: "Task 1", lead: "Ali",   progress: 100, start: "2024-04-01", days: 5 },
-  { id: "2",  phase: "Phase 1", task: "Task 2", lead: "Budi",  progress: 50,  start: "2024-04-06", days: 3 },
-  { id: "3",  phase: "Phase 1", task: "Task 3", lead: "",      progress: 0,   start: "2024-04-09", days: 1 },
-  { id: "4",  phase: "Phase 1", task: "Task 4", lead: "Citra", progress: 0,   start: "2024-04-10", days: 5 },
-  { id: "5",  phase: "Phase 2", task: "Task 1", lead: "Dito",  progress: 25,  start: "2024-04-15", days: 5 },
-  { id: "6",  phase: "Phase 2", task: "Task 2", lead: "Eka",   progress: 10,  start: "2024-04-20", days: 3 },
-  { id: "7",  phase: "Phase 2", task: "Task 3", lead: "",      progress: 0,   start: "2024-04-23", days: 2 },
-  { id: "8",  phase: "Phase 2", task: "Task 4", lead: "Fani",  progress: 0,   start: "2024-04-25", days: 5 },
-  { id: "9",  phase: "Phase 3", task: "Task 1", lead: "Gani",  progress: 20,  start: "2024-04-30", days: 3 },
-  { id: "10", phase: "Phase 3", task: "Task 2", lead: "",      progress: 0,   start: "2024-05-03", days: 2 },
-  { id: "11", phase: "Phase 3", task: "Task 3", lead: "Hani",  progress: 0,   start: "2024-05-05", days: 4 },
-  { id: "12", phase: "Phase 3", task: "Task 4", lead: "",      progress: 0,   start: "2024-05-09", days: 2 },
+  { id: "1",  phase: "Phase 1", task: "Task 1", lead: "Ali",   progress: 100, start: "2026-04-01", days: 5 },
+  { id: "2",  phase: "Phase 1", task: "Task 2", lead: "Budi",  progress: 50,  start: "2026-04-06", days: 3 },
+  { id: "3",  phase: "Phase 1", task: "Task 3", lead: "",      progress: 0,   start: "2026-04-09", days: 1 },
+  { id: "4",  phase: "Phase 1", task: "Task 4", lead: "Citra", progress: 0,   start: "2026-04-10", days: 5 },
+  { id: "5",  phase: "Phase 2", task: "Task 1", lead: "Dito",  progress: 25,  start: "2026-04-15", days: 5 },
+  { id: "6",  phase: "Phase 2", task: "Task 2", lead: "Eka",   progress: 10,  start: "2026-04-20", days: 3 },
+  { id: "7",  phase: "Phase 2", task: "Task 3", lead: "",      progress: 0,   start: "2026-04-23", days: 2 },
+  { id: "8",  phase: "Phase 2", task: "Task 4", lead: "Fani",  progress: 0,   start: "2026-04-25", days: 5 },
+  { id: "9",  phase: "Phase 3", task: "Task 1", lead: "Gani",  progress: 20,  start: "2026-04-30", days: 3 },
+  { id: "10", phase: "Phase 3", task: "Task 2", lead: "",      progress: 0,   start: "2026-05-03", days: 2 },
+  { id: "11", phase: "Phase 3", task: "Task 3", lead: "Hani",  progress: 0,   start: "2026-05-05", days: 4 },
+  { id: "12", phase: "Phase 3", task: "Task 4", lead: "",      progress: 0,   start: "2026-05-09", days: 2 },
 ];
 
 const DAY_W = 20
@@ -175,7 +175,7 @@ export default function GanttApp() {
   const [modal, setModal] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  const isDark = isMounted && theme === "dark"
+  const isDark = isMounted && (theme === "dark")
 
   useEffect(() => {
     setIsMounted(true)
@@ -188,6 +188,7 @@ export default function GanttApp() {
   useEffect(() => { try { localStorage.setItem("gantt_v2", JSON.stringify(tasks)); } catch {} }, [tasks])
 
   const displayTasks = isMounted ? tasks : SAMPLE
+  const todayStr = toISO(new Date())
 
   const C = {
     bg: isDark ? "#0f172a" : "#F4F6F9",
@@ -239,8 +240,9 @@ export default function GanttApp() {
     else if (weekGroups.length) weekGroups[weekGroups.length - 1].span++
   })
 
-  const dayTD = (day, filled, isPhase, isDark) => {
+  const dayTD = (day, filled, isPhase) => {
     const we = isWeekend(day)
+    const isToday = toISO(day) === todayStr
     let bg = we ? C.weekendBg : C.taskRowBg
     if (filled) bg = isPhase ? "#BF360C" : "#E64A19"
     return (
@@ -248,6 +250,7 @@ export default function GanttApp() {
         width: DAY_W, minWidth: DAY_W, maxWidth: DAY_W,
         background: bg, border: "0.5px solid " + (we && !filled ? C.weekendBorder : C.tdBorder),
         padding: 0, height: isPhase ? 28 : 32,
+        borderLeft: isToday ? "2px solid #EF4444" : undefined,
       }} />
     )
   }
@@ -267,7 +270,7 @@ export default function GanttApp() {
         </button>
       </div>
 
-      <div style={{ margin: 16, background: C.containerBg, borderRadius: 10, border: `1px solid ${C.tdBorder}`, overflow: "hidden" }}>
+      <div style={{ margin: 16, background: C.containerBg, border: `1px solid ${C.tdBorder}`, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", tableLayout: "fixed",
             minWidth: LEFT_COLS.reduce((a, c) => a + c.w, 0) + timeline.length * DAY_W }}>
@@ -287,14 +290,14 @@ export default function GanttApp() {
               </tr>
               <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(day) === todayStr ? "2px solid #EF4444" : undefined }}>
                     {day.getDate()}
                   </th>
                 ))}
               </tr>
               <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(day) === todayStr ? "2px solid #EF4444" : undefined }}>
                     {DAY_LETTER[day.getDay()]}
                   </th>
                 ))}
@@ -320,7 +323,7 @@ export default function GanttApp() {
                     <td style={{ ...TD, fontWeight: 700, background: C.phaseBg, fontSize: 11, color: C.textSecondary }}>{fmtUS(phase.start)}</td>
                     <td style={{ ...TD, background: C.phaseBg }}></td>
                     <td style={{ ...TD, fontWeight: 700, background: C.phaseBg, fontSize: 11, color: C.textSecondary }}>{fmtUS(phase.end)}</td>
-                    {timeline.map(day => dayTD(day, day >= phaseStart && day <= phaseEnd, true, isDark))}
+                    {timeline.map(day => dayTD(day, day >= phaseStart && day <= phaseEnd, true))}
                   </tr>,
 
                   ...(!isCol ? phase.tasks.map(t => (
@@ -335,7 +338,7 @@ export default function GanttApp() {
                       <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(t.start)}</td>
                       <td style={{ ...TD, color: C.textTertiary, textAlign: "center" }}>{t.days}</td>
                       <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(taskEnd(t))}</td>
-                      {timeline.map(day => dayTD(day, dayInRange(day, t), false, isDark))}
+                      {timeline.map(day => dayTD(day, dayInRange(day, t), false))}
                     </tr>
                   )) : [])
                 ]
