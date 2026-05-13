@@ -8,10 +8,12 @@ import {
   FolderKanban, 
   LogOut, 
   User,
+  BarChart3,
 } from "lucide-react"
 
 const menuItems = [
   { href: "/projects", icon: FolderKanban, label: "PDCA Board" },
+  { href: "/gantt-of-goals", icon: BarChart3, label: "Gantt of Goals" },
 ]
 
 export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
