@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react"
+import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "react"
 import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,8 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hidden, setHidden] = useState(true)
+  const [showScrollbar, setShowScrollbar] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   async function fetchActivities(offset: number = 0) {
     setLoading(true)
@@ -70,6 +72,31 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
       return () => clearInterval(interval)
     }
   }, [projectId, hidden])
+
+  const handleShowScrollbar = () => {
+    setShowScrollbar(true)
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setShowScrollbar(false)
+    }, 2000)
+  }
+
+  const handleMouseEnter = () => {
+    if (activities.length > 5) {
+      setShowScrollbar(true)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setShowScrollbar(false)
+    }, 500)
+  }
 
   const handleToggle = () => {
     const newHidden = !hidden
@@ -135,18 +162,25 @@ export const ActivityLog = forwardRef<{ refresh: () => void }, ActivityLogProps>
           ) : activities.length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No activity yet</p>
           ) : (
-            <ScrollArea className="h-[150px] pr-4">
-              <div className="space-y-2 text-sm">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="text-gray-600 dark:text-gray-300">
-                    <span className="text-gray-400 dark:text-gray-500 text-xs">
-                      {format(new Date(activity.createdAt), "HH:mm")}
-                    </span>{" "}
-                    {getActivityMessage(activity)}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            <div 
+              className={`h-[150px] pr-4 overflow-auto ${showScrollbar ? "scrollbar-show" : "scrollbar-hide"}`}
+              onScroll={handleShowScrollbar}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <ScrollArea className="h-full">
+                <div className="space-y-2 text-sm">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="text-gray-600 dark:text-gray-300 ml-2 mr-2">
+                      <span className="text-gray-400 dark:text-gray-500 text-xs">
+                        {format(new Date(activity.createdAt), "HH:mm")}
+                      </span>{" "}
+                      {getActivityMessage(activity)}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
           )}
         </div>
       )}

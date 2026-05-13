@@ -121,6 +121,7 @@ enum ProjectStatus {
   ACTIVE
   COMPLETED
   OVERDUE
+  ARCHIVED
 }
 
 enum ProjectRole {

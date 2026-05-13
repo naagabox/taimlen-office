@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <Providers>
@@ -22,7 +22,7 @@ export default function DashboardLayout({
         <main 
           className={`pt-0 transition-all duration-200 ${sidebarOpen ? "md:ml-64" : "md:ml-0"}`}
         >
-          <div className="p-6">
+          <div className="p-0">
             {children}
           </div>
         </main>

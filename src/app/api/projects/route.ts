@@ -59,7 +59,7 @@ export async function GET() {
         user: { select: { name: true, email: true } },
         members: { include: { user: { select: { name: true, email: true } } } },
         tasks: { 
-          select: { status: true }
+          select: { status: true, createdAt: true }
         },
         _count: { select: { tasks: true } },
       },

@@ -28,6 +28,22 @@ import { TaskCard } from "./task-card"
 import { TaskColumn } from "./task-column"
 import { ActivityLog } from "./activity-log"
 
+function formatCreatedAt(dateString: string): string {
+  const date = new Date(dateString)
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"]
+  const months = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ]
+  const dayName = days[date.getDay()]
+  const day = date.getDate()
+  const month = months[date.getMonth()]
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+  return `${dayName}, ${day} ${month} ${year} ${hours}:${minutes} WIB`
+}
+
 export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "FINISHED"
 
 export interface Task {
@@ -39,6 +55,7 @@ export interface Task {
   status: TaskStatus
   order: number
   attachments: string[] | null
+  createdAt: string
 }
 
 interface Member {
@@ -285,6 +302,11 @@ export function TaskBoard({ project, canEdit }: Props) {
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
+          {editingTask?.createdAt && (
+            <p className="text-sm text-muted-foreground">
+              Dibuat: {formatCreatedAt(editingTask.createdAt)}
+            </p>
+          )}
           <form onSubmit={handleEditTask} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="editTaskTitle">Task Title</Label>

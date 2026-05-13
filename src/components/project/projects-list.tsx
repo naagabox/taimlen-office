@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -19,7 +20,7 @@ interface Project {
   name: string
   description: string | null
   dueDate: string
-  status: "ACTIVE" | "COMPLETED" | "OVERDUE"
+  status: "ACTIVE" | "COMPLETED" | "OVERDUE" | "ARCHIVED"
   createdAt: string
   user: { name: string | null; email: string }
   members: { user: { name: string | null; email: string } }[]
@@ -78,6 +79,7 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
   const activeProjects = projects.filter((p) => p.status === "ACTIVE")
   const completedProjects = projects.filter((p) => p.status === "COMPLETED")
   const overdueProjects = projects.filter((p) => p.status === "OVERDUE")
+  const archivedProjects = projects.filter((p) => p.status === "ARCHIVED")
 
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [deletingProject, setDeletingProject] = useState<Project | null>(null)
@@ -151,7 +153,7 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
   }
 
   return (
-    <div className="mx-auto max-w-full px-6 py-8">
+    <div className="mx-auto max-w-full px-6 py-8 -mt-5">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PDCA Board</h1>
@@ -184,46 +186,86 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          {overdueProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-red-600">
-                Overdue ({overdueProjects.length})
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {overdueProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            </div>
-          )}
+        <Tabs defaultValue="active" className="space-y-6">
+          <TabsList variant="line">
+            <TabsTrigger value="active">
+              Active ({activeProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="overdue">
+              Overdue ({overdueProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="finish">
+              Finish ({completedProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="archive">
+              Archive ({archivedProjects.length})
+            </TabsTrigger>
+          </TabsList>
 
-          {activeProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                Active ({activeProjects.length})
-              </h2>
+          <TabsContent value="active">
+            {activeProjects.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {activeProjects.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No active projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-          {completedProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-green-600">
-                Completed ({completedProjects.length})
-              </h2>
+          <TabsContent value="overdue">
+            {overdueProjects.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {overdueProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No overdue projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="finish">
+            {completedProjects.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {completedProjects.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No completed projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="archive">
+            {archivedProjects.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {archivedProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No archived projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
       <Dialog open={!!editingProject} onOpenChange={(open: boolean) => { if (!open) { setEditingProject(null); clearParams() } }}>
