@@ -102,7 +102,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
           </Card>
         </div>
 
-        <div className="lg:col-span-2 space-y-6" style={{ marginBottom: "20px" }}>
+        <div className="lg:col-span-2 space-y-[15px]" style={{ marginBottom: "20px" }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
