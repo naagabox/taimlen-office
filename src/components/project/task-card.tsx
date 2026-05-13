@@ -2,8 +2,9 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, GripVertical, Pencil, Trash2 } from "lucide-react"
+import { Check, Copy, ExternalLink, GripVertical, Pencil, Trash2 } from "lucide-react"
 import { Task } from "./task-board"
 
 interface TaskCardProps {
@@ -25,6 +26,8 @@ function getCardColor(statusId: string) {
 }
 
 export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCardProps) {
+  const [copied, setCopied] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -40,6 +43,12 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
   }
 
   const attachmentCount = task.attachments?.length || 0
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(task.title)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div
@@ -57,6 +66,15 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
         >
           <GripVertical className="h-4 w-4 text-gray-400" />
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+          onClick={handleCopy}
+          title="Copy title"
+        >
+          {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+        </Button>
         <span className="flex-1 text-sm text-gray-900 dark:text-white">{task.title}</span>
         {attachmentCount > 0 && (
           <div className="flex items-center gap-1">

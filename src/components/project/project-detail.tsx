@@ -86,7 +86,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-10">
+        <div className="lg:col-span-10" style={{ marginBottom: "20px" }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Tasks</CardTitle>
@@ -102,7 +102,7 @@ export function ProjectDetail({ project, canEdit }: Props) {
           </Card>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6" style={{ marginBottom: "20px" }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
