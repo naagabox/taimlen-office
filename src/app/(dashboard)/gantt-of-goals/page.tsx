@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTheme } from "next-themes"
 
 function addDays(date, n) {
   const d = new Date(date)
@@ -61,15 +62,6 @@ const SAMPLE = [
   { id: "12", phase: "Phase 3", task: "Task 4", lead: "",      progress: 0,   start: "2024-05-09", days: 2 },
 ];
 
-const TH = {
-  fontSize: 11, fontWeight: 700, color: "#5C7A8A", textTransform: "uppercase",
-  letterSpacing: "0.05em", padding: "6px 8px", background: "#D6EEF0",
-  border: "0.5px solid #B0D8DD", whiteSpace: "nowrap", textAlign: "left",
-}
-const TD = {
-  fontSize: 12, padding: "6px 8px", border: "0.5px solid #E8EAED",
-  verticalAlign: "middle", whiteSpace: "nowrap",
-}
 const DAY_W = 20
 const LEFT_COLS = [
   { key: "task",     label: "TASK",     w: 140 },
@@ -80,12 +72,12 @@ const LEFT_COLS = [
   { key: "end",      label: "END",      w: 80  },
 ]
 
-function ProgressBar({ value }) {
+function ProgressBar({ value, isDark }) {
   return (
-    <div style={{ position: "relative", height: 16, background: "#E8EAF6", borderRadius: 3, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, width: `${value}%`, background: "#7C83D3", borderRadius: 3 }} />
+    <div style={{ position: "relative", height: 16, background: isDark ? "#312e81" : "#E8EAF6", borderRadius: 3, overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, width: `${value}%`, background: isDark ? "#818cf8" : "#7C83D3", borderRadius: 3 }} />
       {value > 0 && (
-        <span style={{ position: "absolute", right: 4, top: 0, lineHeight: "16px", fontSize: 10, color: "#3C3F99", fontWeight: 600 }}>
+        <span style={{ position: "absolute", right: 4, top: 0, lineHeight: "16px", fontSize: 10, color: isDark ? "#c7d2fe" : "#3C3F99", fontWeight: 600 }}>
           {value}%
         </span>
       )}
@@ -93,13 +85,13 @@ function ProgressBar({ value }) {
   )
 }
 
-function Modal({ title, onClose, children }) {
+function Modal({ title, onClose, children, isDark }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-      <div style={{ background: "#fff", borderRadius: 12, padding: 28, width: 420, maxWidth: "92vw", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
+      <div style={{ background: isDark ? "#1e293b" : "#fff", borderRadius: 12, padding: 28, width: 420, maxWidth: "92vw", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "#1a1a2e" }}>{title}</span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#999", lineHeight: 1 }}>×</button>
+          <span style={{ fontWeight: 700, fontSize: 15, color: isDark ? "#f1f5f9" : "#1a1a2e" }}>{title}</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: isDark ? "#64748b" : "#999", lineHeight: 1 }}>×</button>
         </div>
         {children}
       </div>
@@ -107,7 +99,7 @@ function Modal({ title, onClose, children }) {
   )
 }
 
-function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
+function TaskForm({ initial, phases, onSave, onDelete, onClose, isDark }) {
   const [f, setF] = useState(initial || { phase: phases[0] || "", task: "", lead: "", progress: 0, start: "", days: 1 })
   const [err, setErr] = useState("")
   const set = (k, v) => setF(p => ({ ...p, [k]: v }))
@@ -119,8 +111,8 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
     onSave({ ...f, phase: f.phase.trim(), task: f.task.trim(), lead: f.lead.trim(), days: +f.days, progress: +f.progress })
   }
 
-  const inp = { width: "100%", padding: "7px 9px", border: "1px solid #D1D5DB", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }
-  const lbl = { fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4, marginTop: 12 }
+  const inp = { width: "100%", padding: "7px 9px", border: `1px solid ${isDark ? "#475569" : "#D1D5DB"}`, borderRadius: 6, fontSize: 13, boxSizing: "border-box", background: isDark ? "#1e293b" : "#fff", color: isDark ? "#f1f5f9" : "#1a1a2e" }
+  const lbl = { fontSize: 12, fontWeight: 600, color: isDark ? "#94a3b8" : "#374151", display: "block", marginBottom: 4, marginTop: 12 }
 
   return (
     <div>
@@ -134,10 +126,10 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
       <label style={lbl}>Lead</label>
       <input value={f.lead} onChange={e => set("lead", e.target.value)} style={inp} placeholder="Nama penanggung jawab (opsional)" />
 
-      <label style={lbl}>Progress — <span style={{ color: "#7C83D3", fontWeight: 700 }}>{f.progress}%</span></label>
+      <label style={lbl}>Progress — <span style={{ color: isDark ? "#818cf8" : "#7C83D3", fontWeight: 700 }}>{f.progress}%</span></label>
       <input type="range" min={0} max={100} step={1} value={f.progress}
         onChange={e => set("progress", +e.target.value)}
-        style={{ width: "100%", accentColor: "#7C83D3" }} />
+        style={{ width: "100%", accentColor: isDark ? "#818cf8" : "#7C83D3" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
@@ -151,7 +143,7 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
       </div>
 
       {f.start && f.days >= 1 && (
-        <p style={{ fontSize: 12, color: "#6B7280", marginTop: 8 }}>
+        <p style={{ fontSize: 12, color: isDark ? "#64748b" : "#6B7280", marginTop: 8 }}>
           End: <strong>{fmtUS(toISO(addDays(parseDate(f.start), +f.days - 1)))}</strong>
         </p>
       )}
@@ -161,13 +153,13 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
       <div style={{ display: "flex", gap: 8, marginTop: 20, justifyContent: "space-between" }}>
         <div>
           {onDelete && (
-            <button onClick={onDelete} style={{ padding: "8px 14px", border: "1px solid #FCA5A5", borderRadius: 6, background: "#fff", color: "#EF4444", fontSize: 13, cursor: "pointer" }}>
+            <button onClick={onDelete} style={{ padding: "8px 14px", border: "1px solid #FCA5A5", borderRadius: 6, background: isDark ? "#1e293b" : "#fff", color: "#EF4444", fontSize: 13, cursor: "pointer" }}>
               Hapus
             </button>
           )}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={onClose} style={{ padding: "8px 16px", border: "1px solid #D1D5DB", borderRadius: 6, background: "#fff", fontSize: 13, cursor: "pointer" }}>Batal</button>
+          <button onClick={onClose} style={{ padding: "8px 16px", border: "1px solid #D1D5DB", borderRadius: 6, background: isDark ? "#1e293b" : "#fff", color: isDark ? "#f1f5f9" : "#1a1a2e", fontSize: 13, cursor: "pointer" }}>Batal</button>
           <button onClick={save} style={{ padding: "8px 16px", border: "none", borderRadius: 6, background: "#E64A19", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Simpan</button>
         </div>
       </div>
@@ -176,11 +168,14 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }) {
 }
 
 export default function GanttApp() {
+  const { theme } = useTheme()
   const [tasks, setTasks] = useState(SAMPLE)
   const [isMounted, setIsMounted] = useState(false)
   const [collapsed, setCollapsed] = useState({})
   const [modal, setModal] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+
+  const isDark = isMounted && theme === "dark"
 
   useEffect(() => {
     setIsMounted(true)
@@ -193,6 +188,36 @@ export default function GanttApp() {
   useEffect(() => { try { localStorage.setItem("gantt_v2", JSON.stringify(tasks)); } catch {} }, [tasks])
 
   const displayTasks = isMounted ? tasks : SAMPLE
+
+  const C = {
+    bg: isDark ? "#0f172a" : "#F4F6F9",
+    containerBg: isDark ? "#1e293b" : "#fff",
+    headerBg: isDark ? "#1e293b" : "#fff",
+    thBg: isDark ? "#1e3a5f" : "#D6EEF0",
+    thText: isDark ? "#94a3b8" : "#5C7A8A",
+    tdBorder: isDark ? "#334155" : "#E8EAED",
+    phaseBg: isDark ? "#422006" : "#FFF8E1",
+    phaseText: isDark ? "#fb923c" : "#E64A19",
+    taskRowBg: isDark ? "#1e293b" : "#fff",
+    taskRowBgHover: isDark ? "#334155" : "#FAFAFA",
+    weekendBg: isDark ? "#451a03" : "#FFF3E0",
+    weekendBorder: isDark ? "#78350f" : "#FFCCBC",
+    textPrimary: isDark ? "#f1f5f9" : "#1a1a2e",
+    textSecondary: isDark ? "#94a3b8" : "#6B7280",
+    textTertiary: isDark ? "#64748b" : "#374151",
+    inputBorder: isDark ? "#475569" : "#D1D5DB",
+    inputBg: isDark ? "#1e293b" : "#fff",
+  }
+
+  const TH = {
+    fontSize: 11, fontWeight: 700, color: C.thText, textTransform: "uppercase",
+    letterSpacing: "0.05em", padding: "6px 8px", background: C.thBg,
+    border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "left",
+  }
+  const TD = {
+    fontSize: 12, padding: "6px 8px", border: `0.5px solid ${C.tdBorder}`,
+    verticalAlign: "middle", whiteSpace: "nowrap",
+  }
 
   const timeline = buildTimeline(displayTasks)
   const phases = computePhases(displayTasks)
@@ -214,25 +239,25 @@ export default function GanttApp() {
     else if (weekGroups.length) weekGroups[weekGroups.length - 1].span++
   })
 
-  const dayTD = (day, filled, isPhase) => {
+  const dayTD = (day, filled, isPhase, isDark) => {
     const we = isWeekend(day)
-    let bg = we ? "#FFF3E0" : "#fff"
+    let bg = we ? C.weekendBg : C.taskRowBg
     if (filled) bg = isPhase ? "#BF360C" : "#E64A19"
     return (
       <td key={day.toISOString()} style={{
         width: DAY_W, minWidth: DAY_W, maxWidth: DAY_W,
-        background: bg, border: "0.5px solid " + (we && !filled ? "#FFCCBC" : "#F3E5F5"),
+        background: bg, border: "0.5px solid " + (we && !filled ? C.weekendBorder : C.tdBorder),
         padding: 0, height: isPhase ? 28 : 32,
       }} />
     )
   }
 
   return (
-    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#F4F6F9", minHeight: "100vh" }}>
-      <div style={{ background: "#fff", borderBottom: "1px solid #E5E7EB", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: C.bg, minHeight: "100vh" }}>
+      <div style={{ background: C.headerBg, borderBottom: `1px solid ${C.tdBorder}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#1a1a2e" }}>Gantt of Goals</h1>
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6B7280" }}>
+          <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.textPrimary }}>Gantt of Goals</h1>
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textSecondary }}>
             {displayTasks.length} tasks · {phases.length} phases · {timeline.length} hari
           </p>
         </div>
@@ -242,7 +267,7 @@ export default function GanttApp() {
         </button>
       </div>
 
-      <div style={{ margin: 16, background: "#fff", borderRadius: 10, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+      <div style={{ margin: 16, background: C.containerBg, borderRadius: 10, border: `1px solid ${C.tdBorder}`, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", tableLayout: "fixed",
             minWidth: LEFT_COLS.reduce((a, c) => a + c.w, 0) + timeline.length * DAY_W }}>
@@ -252,24 +277,24 @@ export default function GanttApp() {
             </colgroup>
 
             <thead>
-              <tr style={{ background: "#D6EEF0" }}>
-                {LEFT_COLS.map(c => <th key={c.key} style={{ ...TH, background: "#D6EEF0" }} rowSpan={3}>{c.label}</th>)}
+              <tr style={{ background: C.thBg }}>
+                {LEFT_COLS.map(c => <th key={c.key} style={{ ...TH, background: C.thBg }} rowSpan={3}>{c.label}</th>)}
                 {weekGroups.map((wg, i) => (
-                  <th key={i} colSpan={wg.span} style={{ ...TH, textAlign: "center", borderLeft: "1px solid #B0D8DD", fontSize: 10, padding: "4px 2px" }}>
+                  <th key={i} colSpan={wg.span} style={{ ...TH, textAlign: "center", borderLeft: `1px solid ${C.tdBorder}`, fontSize: 10, padding: "4px 2px", background: C.thBg }}>
                     {wg.date}
                   </th>
                 ))}
               </tr>
-              <tr style={{ background: "#D6EEF0" }}>
+              <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? "#FFF3E0" : "#D6EEF0" }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg }}>
                     {day.getDate()}
                   </th>
                 ))}
               </tr>
-              <tr style={{ background: "#D6EEF0" }}>
+              <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? "#FFF3E0" : "#D6EEF0" }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg }}>
                     {DAY_LETTER[day.getDay()]}
                   </th>
                 ))}
@@ -284,33 +309,33 @@ export default function GanttApp() {
 
                 return [
                   <tr key={`ph-${phase.name}`}
-                    style={{ background: "#FFF8E1", cursor: "pointer" }}
+                    style={{ background: C.phaseBg, cursor: "pointer" }}
                     onClick={() => setCollapsed(c => ({ ...c, [phase.name]: !c[phase.name] }))}>
-                    <td style={{ ...TD, fontWeight: 800, fontSize: 13, color: "#E64A19", background: "#FFF8E1" }}>
+                    <td style={{ ...TD, fontWeight: 800, fontSize: 13, color: C.phaseText, background: C.phaseBg }}>
                       <span style={{ marginRight: 6, display: "inline-block", transition: "transform .2s", transform: isCol ? "rotate(-90deg)" : "rotate(0)" }}>▼</span>
                       {phase.name}
                     </td>
-                    <td style={{ ...TD, background: "#FFF8E1" }}></td>
-                    <td style={{ ...TD, background: "#FFF8E1" }}></td>
-                    <td style={{ ...TD, fontWeight: 700, background: "#FFF8E1", fontSize: 11 }}>{fmtUS(phase.start)}</td>
-                    <td style={{ ...TD, background: "#FFF8E1" }}></td>
-                    <td style={{ ...TD, fontWeight: 700, background: "#FFF8E1", fontSize: 11 }}>{fmtUS(phase.end)}</td>
-                    {timeline.map(day => dayTD(day, day >= phaseStart && day <= phaseEnd, true))}
+                    <td style={{ ...TD, background: C.phaseBg }}></td>
+                    <td style={{ ...TD, background: C.phaseBg }}></td>
+                    <td style={{ ...TD, fontWeight: 700, background: C.phaseBg, fontSize: 11, color: C.textSecondary }}>{fmtUS(phase.start)}</td>
+                    <td style={{ ...TD, background: C.phaseBg }}></td>
+                    <td style={{ ...TD, fontWeight: 700, background: C.phaseBg, fontSize: 11, color: C.textSecondary }}>{fmtUS(phase.end)}</td>
+                    {timeline.map(day => dayTD(day, day >= phaseStart && day <= phaseEnd, true, isDark))}
                   </tr>,
 
                   ...(!isCol ? phase.tasks.map(t => (
-                    <tr key={t.id} style={{ background: "#fff" }}
+                    <tr key={t.id} style={{ background: C.taskRowBg }}
                       onClick={() => setModal({ type: "edit", task: t })}
-                      onMouseEnter={e => e.currentTarget.style.background = "#FAFAFA"}
-                      onMouseLeave={e => e.currentTarget.style.background = "#fff"}
+                      onMouseEnter={e => e.currentTarget.style.background = C.taskRowBgHover}
+                      onMouseLeave={e => e.currentTarget.style.background = C.taskRowBg}
                       style={{ cursor: "pointer" }}>
-                      <td style={{ ...TD, paddingLeft: 24, color: "#374151" }}>{t.task}</td>
-                      <td style={{ ...TD, color: "#6B7280" }}>{t.lead}</td>
-                      <td style={{ ...TD }}><ProgressBar value={t.progress} /></td>
-                      <td style={{ ...TD, color: "#374151", fontSize: 11 }}>{fmtUS(t.start)}</td>
-                      <td style={{ ...TD, color: "#374151", textAlign: "center" }}>{t.days}</td>
-                      <td style={{ ...TD, color: "#374151", fontSize: 11 }}>{fmtUS(taskEnd(t))}</td>
-                      {timeline.map(day => dayTD(day, dayInRange(day, t), false))}
+                      <td style={{ ...TD, paddingLeft: 24, color: C.textTertiary }}>{t.task}</td>
+                      <td style={{ ...TD, color: C.textSecondary }}>{t.lead}</td>
+                      <td style={{ ...TD }}><ProgressBar value={t.progress} isDark={isDark} /></td>
+                      <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(t.start)}</td>
+                      <td style={{ ...TD, color: C.textTertiary, textAlign: "center" }}>{t.days}</td>
+                      <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(taskEnd(t))}</td>
+                      {timeline.map(day => dayTD(day, dayInRange(day, t), false, isDark))}
                     </tr>
                   )) : [])
                 ]
@@ -321,30 +346,31 @@ export default function GanttApp() {
       </div>
 
       {modal?.type === "add" && (
-        <Modal title="Tambah Task Baru" onClose={() => setModal(null)}>
-          <TaskForm phases={phaseNames} onSave={f => saveTask(f, null)} onClose={() => setModal(null)} />
+        <Modal title="Tambah Task Baru" onClose={() => setModal(null)} isDark={isDark}>
+          <TaskForm phases={phaseNames} onSave={f => saveTask(f, null)} onClose={() => setModal(null)} isDark={isDark} />
         </Modal>
       )}
 
       {modal?.type === "edit" && (
-        <Modal title="Edit Task" onClose={() => setModal(null)}>
+        <Modal title="Edit Task" onClose={() => setModal(null)} isDark={isDark}>
           <TaskForm
             initial={modal.task}
             phases={phaseNames}
             onSave={f => saveTask(f, modal.task.id)}
             onDelete={() => setDeleteConfirm(modal.task.id)}
             onClose={() => setModal(null)}
+            isDark={isDark}
           />
         </Modal>
       )}
 
       {deleteConfirm && (
-        <Modal title="Hapus Task?" onClose={() => setDeleteConfirm(null)}>
-          <p style={{ color: "#374151", fontSize: 14, marginBottom: 20 }}>
+        <Modal title="Hapus Task?" onClose={() => setDeleteConfirm(null)} isDark={isDark}>
+          <p style={{ color: isDark ? "#f1f5f9" : "#374151", fontSize: 14, marginBottom: 20 }}>
             Yakin ingin menghapus task ini? Tindakan tidak bisa dibatalkan.
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 18px", border: "1px solid #D1D5DB", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 13 }}>Batal</button>
+            <button onClick={() => setDeleteConfirm(null)} style={{ padding: "8px 18px", border: "1px solid #D1D5DB", borderRadius: 6, background: isDark ? "#1e293b" : "#fff", color: isDark ? "#f1f5f9" : "#1a1a2e", cursor: "pointer", fontSize: 13 }}>Batal</button>
             <button onClick={() => deleteTask(deleteConfirm)} style={{ padding: "8px 18px", border: "none", borderRadius: 6, background: "#EF4444", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Hapus</button>
           </div>
         </Modal>
