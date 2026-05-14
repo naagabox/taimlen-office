@@ -26,9 +26,23 @@ function dayInRange(day, t) {
 }
 
 function buildTimeline(tasks) {
-  if (!tasks.length) return [];
+  const today = new Date();
+  const todayPlus20 = addDays(today, 20);
+
+  if (!tasks.length) {
+    const days = [];
+    let cur = new Date(today);
+    while (cur <= todayPlus20) { days.push(new Date(cur)); cur = addDays(cur, 1); }
+    return days;
+  }
+
   let min = tasks.reduce((a, t) => (t.start < a ? t.start : a), tasks[0].start);
   let max = tasks.reduce((a, t) => { const e = taskEnd(t); return e > a ? e : a; }, "");
+
+  const maxDate = parseDate(max);
+
+  if (todayPlus20 > maxDate) max = toISO(todayPlus20);
+
   const days = [];
   let cur = parseDate(min);
   const end = parseDate(max);
@@ -64,7 +78,7 @@ const SAMPLE = [
 
 const DAY_W = 20
 const LEFT_COLS = [
-  { key: "task",     label: "TASK",     w: 140 },
+  { key: "task",     label: "PROJECT/TASK",     w: 180 },
   { key: "lead",     label: "LEAD",     w: 100 },
   { key: "progress", label: "PROGRESS", w: 120 },
   { key: "start",    label: "START",    w: 80  },
@@ -76,11 +90,9 @@ function ProgressBar({ value, isDark }) {
   return (
     <div style={{ position: "relative", height: 16, background: isDark ? "#312e81" : "#E8EAF6", borderRadius: 3, overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, width: `${value}%`, background: isDark ? "#818cf8" : "#7C83D3", borderRadius: 3 }} />
-      {value > 0 && (
-        <span style={{ position: "absolute", right: 4, top: 0, lineHeight: "16px", fontSize: 10, color: isDark ? "#c7d2fe" : "#3C3F99", fontWeight: 600 }}>
+      <span style={{ position: "absolute", left: 0, right: 0, textAlign: "center", top: 0, lineHeight: "16px", fontSize: 10, color: isDark ? "#c7d2fe" : "#3C3F99", fontWeight: 600 }}>
           {value}%
         </span>
-      )}
     </div>
   )
 }
@@ -213,11 +225,11 @@ export default function GanttApp() {
   const TH = {
     fontSize: 11, fontWeight: 700, color: C.thText, textTransform: "uppercase",
     letterSpacing: "0.05em", padding: "6px 8px", background: C.thBg,
-    border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "left",
+    border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "center",
   }
   const TD = {
     fontSize: 12, padding: "6px 8px", border: `0.5px solid ${C.tdBorder}`,
-    verticalAlign: "middle", whiteSpace: "nowrap",
+    verticalAlign: "middle", whiteSpace: "nowrap", textAlign: "center",
   }
 
   const timeline = buildTimeline(displayTasks)
@@ -281,7 +293,7 @@ export default function GanttApp() {
 
             <thead>
               <tr style={{ background: C.thBg }}>
-                {LEFT_COLS.map(c => <th key={c.key} style={{ ...TH, background: C.thBg }} rowSpan={3}>{c.label}</th>)}
+                {LEFT_COLS.map(c => <th key={c.key} style={{ ...TH, background: C.thBg, textAlign: c.key === "task" ? "left" : "center" }} rowSpan={3}>{c.label}</th>)}
                 {weekGroups.map((wg, i) => (
                   <th key={i} colSpan={wg.span} style={{ ...TH, textAlign: "center", borderLeft: `1px solid ${C.tdBorder}`, fontSize: 10, padding: "4px 2px", background: C.thBg }}>
                     {wg.date}
@@ -314,7 +326,7 @@ export default function GanttApp() {
                   <tr key={`ph-${phase.name}`}
                     style={{ background: C.phaseBg, cursor: "pointer" }}
                     onClick={() => setCollapsed(c => ({ ...c, [phase.name]: !c[phase.name] }))}>
-                    <td style={{ ...TD, fontWeight: 800, fontSize: 13, color: C.phaseText, background: C.phaseBg }}>
+                    <td style={{ ...TD, fontWeight: 800, fontSize: 13, color: C.phaseText, background: C.phaseBg, textAlign: "left" }}>
                       <span style={{ marginRight: 6, display: "inline-block", transition: "transform .2s", transform: isCol ? "rotate(-90deg)" : "rotate(0)" }}>▼</span>
                       {phase.name}
                     </td>
@@ -332,7 +344,7 @@ export default function GanttApp() {
                       onMouseEnter={e => e.currentTarget.style.background = C.taskRowBgHover}
                       onMouseLeave={e => e.currentTarget.style.background = C.taskRowBg}
                       style={{ cursor: "pointer" }}>
-                      <td style={{ ...TD, paddingLeft: 24, color: C.textTertiary }}>{t.task}</td>
+                      <td style={{ ...TD, paddingLeft: 24, color: C.textTertiary, textAlign: "left" }}>{t.task}</td>
                       <td style={{ ...TD, color: C.textSecondary }}>{t.lead}</td>
                       <td style={{ ...TD }}><ProgressBar value={t.progress} isDark={isDark} /></td>
                       <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(t.start)}</td>
