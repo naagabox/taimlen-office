@@ -15,6 +15,7 @@ function fmtUS(iso) {
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
 }
 function fmtUSShort(d) { return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
+function fmtMonthYear(d) { return d.toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
 function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
 const DAY_LETTER = ["S", "M", "T", "W", "T", "F", "S"]
 function uid() { return Math.random().toString(36).slice(2, 9); }
@@ -226,10 +227,12 @@ export default function GanttApp() {
     fontSize: 11, fontWeight: 700, color: C.thText, textTransform: "uppercase",
     letterSpacing: "0.05em", padding: "6px 8px", background: C.thBg,
     border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "center",
+    transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease",
   }
   const TD = {
     fontSize: 12, padding: "6px 8px", border: `0.5px solid ${C.tdBorder}`,
     verticalAlign: "middle", whiteSpace: "nowrap", textAlign: "center",
+    transition: "background-color 0.3s ease, border-color 0.3s ease",
   }
 
   const timeline = buildTimeline(displayTasks)
@@ -247,8 +250,19 @@ export default function GanttApp() {
   }
 
   const weekGroups = []
+  let weekCounter = 0
+  let prevMonth = null
   timeline.forEach((day, i) => {
-    if (day.getDay() === 1 || i === 0) weekGroups.push({ date: fmtUSShort(day), span: 1 })
+    const currentMonth = day.getMonth()
+    if (day.getDay() === 1 || i === 0) {
+      if (currentMonth !== prevMonth) {
+        weekCounter = 1
+        prevMonth = currentMonth
+      } else {
+        weekCounter++
+      }
+      weekGroups.push({ date: `W${weekCounter} ${fmtMonthYear(day)}`, span: 1 })
+    }
     else if (weekGroups.length) weekGroups[weekGroups.length - 1].span++
   })
 
@@ -263,13 +277,14 @@ export default function GanttApp() {
         background: bg, border: "0.5px solid " + (we && !filled ? C.weekendBorder : C.tdBorder),
         padding: 0, height: isPhase ? 28 : 32,
         borderLeft: isToday ? "2px solid #EF4444" : undefined,
+        transition: "background-color 0.3s ease, border-color 0.3s ease",
       }} />
     )
   }
 
   return (
-    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: C.bg, minHeight: "100vh" }}>
-      <div style={{ background: C.headerBg, borderBottom: `1px solid ${C.tdBorder}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: C.bg, minHeight: "100vh", transition: "background-color 0.3s ease" }}>
+      <div style={{ background: C.headerBg, borderBottom: `1px solid ${C.tdBorder}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background-color 0.3s ease, border-color 0.3s ease" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.textPrimary }}>Gantt of Goals</h1>
           <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textSecondary }}>
@@ -282,7 +297,7 @@ export default function GanttApp() {
         </button>
       </div>
 
-      <div style={{ margin: 16, background: C.containerBg, border: `1px solid ${C.tdBorder}`, overflow: "hidden" }}>
+      <div style={{ margin: 16, background: C.containerBg, border: `1px solid ${C.tdBorder}`, overflow: "hidden", transition: "background-color 0.3s ease, border-color 0.3s ease" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", tableLayout: "fixed",
             minWidth: LEFT_COLS.reduce((a, c) => a + c.w, 0) + timeline.length * DAY_W }}>

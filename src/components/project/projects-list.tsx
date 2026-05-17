@@ -83,6 +83,7 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
 
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [deletingProject, setDeletingProject] = useState<Project | null>(null)
+  const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -133,6 +134,33 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
     }
   }
 
+  async function handleCreateProject(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get("name") as string
+    const description = formData.get("description") as string
+    const dueDate = formData.get("dueDate") as string
+
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, dueDate }),
+      })
+
+      if (res.ok) {
+        setIsCreatingProject(false)
+        router.refresh()
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleDeleteProject() {
     if (!deletingProject) return
     
@@ -159,12 +187,10 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PDCA Board</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-300">Manage and track your projects</p>
         </div>
-        <Link href="/projects/new">
-          <Button>
+        <Button onClick={() => setIsCreatingProject(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
-        </Link>
       </div>
 
       {projects.length > 0 && (
@@ -177,12 +203,10 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-gray-500 dark:text-gray-400">No projects yet. Create your first project!</p>
-            <Link href="/projects/new">
-              <Button className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Project
-              </Button>
-            </Link>
+            <Button className="mt-4" onClick={() => setIsCreatingProject(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Project
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -295,6 +319,48 @@ function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, se
             <Button type="submit" disabled={loading} className="w-full">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreatingProject} onOpenChange={(open) => !open && setIsCreatingProject(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateProject} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newProjectName">Project Name</Label>
+              <Input
+                id="newProjectName"
+                name="name"
+                type="text"
+                required
+                placeholder="Enter project name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newProjectDesc">Description</Label>
+              <Input
+                id="newProjectDesc"
+                name="description"
+                type="text"
+                placeholder="Enter description (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newProjectDueDate">Due Date</Label>
+              <Input
+                id="newProjectDueDate"
+                name="dueDate"
+                type="date"
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Project
             </Button>
           </form>
         </DialogContent>
