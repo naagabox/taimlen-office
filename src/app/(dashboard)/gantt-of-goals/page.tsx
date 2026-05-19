@@ -287,7 +287,7 @@ export default function GanttApp() {
 
   const dayTD = (day: Date, filled: boolean, isPhase: boolean) => {
     const we = isWeekend(day)
-    const isToday = toISO(day) === todayStr
+    const isToday = toISO(addDays(day, 1)) === todayStr
     let bg = we ? C.weekendBg : C.taskRowBg
     if (filled) bg = isPhase ? "#BF360C" : "#E64A19"
     return (
@@ -336,14 +336,14 @@ export default function GanttApp() {
               </tr>
               <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(day) === todayStr ? "2px solid #EF4444" : undefined }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(addDays(day, 1)) === todayStr ? "2px solid #EF4444" : undefined }}>
                     {day.getDate()}
                   </th>
                 ))}
               </tr>
               <tr style={{ background: C.thBg }}>
                 {timeline.map(day => (
-                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(day) === todayStr ? "2px solid #EF4444" : undefined }}>
+                  <th key={day.toISOString()} style={{ ...TH, textAlign: "center", padding: "2px 0", fontSize: 10, width: DAY_W, background: isWeekend(day) ? C.weekendBg : C.thBg, borderLeft: toISO(addDays(day, 1)) === todayStr ? "2px solid #EF4444" : undefined }}>
                     {DAY_LETTER[day.getDay()]}
                   </th>
                 ))}
