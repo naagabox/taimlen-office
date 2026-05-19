@@ -3,35 +3,45 @@
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 
-function addDays(date, n) {
+function addDays(date: Date | string, n: number): Date {
   const d = new Date(date)
   d.setDate(d.getDate() + n)
   return d
 }
-function toISO(d) { return d.toISOString().slice(0, 10); }
-function parseDate(s) { const [y, m, d] = s.split("-"); return new Date(+y, +m - 1, +d); }
-function fmtUS(iso) {
+function toISO(d: Date): string { return d.toISOString().slice(0, 10); }
+function parseDate(s: string): Date { const [y, m, d] = s.split("-"); return new Date(+y, +m - 1, +d); }
+function fmtUS(iso: string): string {
   const d = parseDate(iso)
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
 }
-function fmtUSShort(d) { return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
-function fmtMonthYear(d) { return d.toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
-function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
+function fmtUSShort(d: Date): string { return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
+function fmtMonthYear(d: Date): string { return d.toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
+function isWeekend(d: Date): boolean { return d.getDay() === 0 || d.getDay() === 6; }
 const DAY_LETTER = ["S", "M", "T", "W", "T", "F", "S"]
 function uid() { return Math.random().toString(36).slice(2, 9); }
 
-function taskEnd(t) { return toISO(addDays(parseDate(t.start), t.days - 1)); }
-function dayInRange(day, t) {
+interface GanttTask {
+  id: string
+  phase: string
+  task: string
+  lead: string
+  progress: number
+  start: string
+  days: number
+}
+
+function taskEnd(t: GanttTask): string { return toISO(addDays(parseDate(t.start), t.days - 1)); }
+function dayInRange(day: Date, t: GanttTask): boolean {
   const s = parseDate(t.start), e = parseDate(taskEnd(t));
   return day >= s && day <= e;
 }
 
-function buildTimeline(tasks) {
+function buildTimeline(tasks: GanttTask[]): Date[] {
   const today = new Date();
   const todayPlus20 = addDays(today, 20);
 
   if (!tasks.length) {
-    const days = [];
+    const days: Date[] = [];
     let cur = new Date(today);
     while (cur <= todayPlus20) { days.push(new Date(cur)); cur = addDays(cur, 1); }
     return days;
@@ -44,15 +54,15 @@ function buildTimeline(tasks) {
 
   if (todayPlus20 > maxDate) max = toISO(todayPlus20);
 
-  const days = [];
+  const days: Date[] = [];
   let cur = parseDate(min);
   const end = parseDate(max);
   while (cur <= end) { days.push(new Date(cur)); cur = addDays(cur, 1); }
   return days;
 }
 
-function computePhases(tasks) {
-  const map = {};
+function computePhases(tasks: GanttTask[]) {
+  const map: Record<string, GanttTask[]> = {};
   tasks.forEach(t => { if (!map[t.phase]) map[t.phase] = []; map[t.phase].push(t); });
   return Object.entries(map).map(([name, ts]) => ({
     name,
@@ -62,7 +72,7 @@ function computePhases(tasks) {
   }));
 }
 
-const SAMPLE = [
+const SAMPLE: GanttTask[] = [
   { id: "1",  phase: "Phase 1", task: "Task 1", lead: "Ali",   progress: 100, start: "2026-04-01", days: 5 },
   { id: "2",  phase: "Phase 1", task: "Task 2", lead: "Budi",  progress: 50,  start: "2026-04-06", days: 3 },
   { id: "3",  phase: "Phase 1", task: "Task 3", lead: "",      progress: 0,   start: "2026-04-09", days: 1 },
@@ -87,7 +97,7 @@ const LEFT_COLS = [
   { key: "end",      label: "END",      w: 80  },
 ]
 
-function ProgressBar({ value, isDark }) {
+function ProgressBar({ value, isDark }: { value: number; isDark: boolean }) {
   return (
     <div style={{ position: "relative", height: 16, background: isDark ? "#312e81" : "#E8EAF6", borderRadius: 3, overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, width: `${value}%`, background: isDark ? "#818cf8" : "#7C83D3", borderRadius: 3 }} />
@@ -98,7 +108,7 @@ function ProgressBar({ value, isDark }) {
   )
 }
 
-function Modal({ title, onClose, children, isDark }) {
+function Modal({ title, onClose, children, isDark }: { title: string; onClose: () => void; children: React.ReactNode; isDark: boolean }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
       <div style={{ background: isDark ? "#1e293b" : "#fff", borderRadius: 12, padding: 28, width: 420, maxWidth: "92vw", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
@@ -112,10 +122,19 @@ function Modal({ title, onClose, children, isDark }) {
   )
 }
 
-function TaskForm({ initial, phases, onSave, onDelete, onClose, isDark }) {
-  const [f, setF] = useState(initial || { phase: phases[0] || "", task: "", lead: "", progress: 0, start: "", days: 1 })
+interface TaskFormProps {
+  initial?: Partial<GanttTask>
+  phases: string[]
+  onSave: (task: GanttTask) => void
+  onDelete?: () => void
+  onClose: () => void
+  isDark: boolean
+}
+
+function TaskForm({ initial, phases, onSave, onDelete, onClose, isDark }: TaskFormProps) {
+  const [f, setF] = useState<GanttTask>(initial ? { phase: initial.phase || "", task: initial.task || "", lead: initial.lead || "", progress: initial.progress || 0, start: initial.start || "", days: initial.days || 1, id: initial.id || uid() } : { id: uid(), phase: phases[0] || "", task: "", lead: "", progress: 0, start: "", days: 1 })
   const [err, setErr] = useState("")
-  const set = (k, v) => setF(p => ({ ...p, [k]: v }))
+  const set = (k: keyof GanttTask, v: string | number) => setF(p => ({ ...p, [k]: v }))
 
   function save() {
     if (!f.phase.trim() || !f.task.trim() || !f.start || f.days < 1) {
@@ -124,7 +143,7 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose, isDark }) {
     onSave({ ...f, phase: f.phase.trim(), task: f.task.trim(), lead: f.lead.trim(), days: +f.days, progress: +f.progress })
   }
 
-  const inp = { width: "100%", padding: "7px 9px", border: `1px solid ${isDark ? "#475569" : "#D1D5DB"}`, borderRadius: 6, fontSize: 13, boxSizing: "border-box", background: isDark ? "#1e293b" : "#fff", color: isDark ? "#f1f5f9" : "#1a1a2e" }
+  const inp: React.CSSProperties = { width: "100%", padding: "7px 9px", border: `1px solid ${isDark ? "#475569" : "#D1D5DB"}`, borderRadius: 6, fontSize: 13, boxSizing: "border-box" as const, background: isDark ? "#1e293b" : "#fff", color: isDark ? "#f1f5f9" : "#1a1a2e" }
   const lbl = { fontSize: 12, fontWeight: 600, color: isDark ? "#94a3b8" : "#374151", display: "block", marginBottom: 4, marginTop: 12 }
 
   return (
@@ -182,11 +201,11 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose, isDark }) {
 
 export default function GanttApp() {
   const { theme } = useTheme()
-  const [tasks, setTasks] = useState(SAMPLE)
+  const [tasks, setTasks] = useState<GanttTask[]>(SAMPLE)
   const [isMounted, setIsMounted] = useState(false)
-  const [collapsed, setCollapsed] = useState({})
-  const [modal, setModal] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [modal, setModal] = useState<{ type: string; task?: GanttTask } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const isDark = isMounted && (theme === "dark")
 
@@ -223,15 +242,15 @@ export default function GanttApp() {
     inputBg: isDark ? "#1e293b" : "#fff",
   }
 
-  const TH = {
+  const TH: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: C.thText, textTransform: "uppercase",
     letterSpacing: "0.05em", padding: "6px 8px", background: C.thBg,
-    border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "center",
+    border: `0.5px solid ${C.tdBorder}`, whiteSpace: "nowrap", textAlign: "center" as const,
     transition: "background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease",
   }
-  const TD = {
+  const TD: React.CSSProperties = {
     fontSize: 12, padding: "6px 8px", border: `0.5px solid ${C.tdBorder}`,
-    verticalAlign: "middle", whiteSpace: "nowrap", textAlign: "center",
+    verticalAlign: "middle", whiteSpace: "nowrap", textAlign: "center" as const,
     transition: "background-color 0.3s ease, border-color 0.3s ease",
   }
 
@@ -239,19 +258,19 @@ export default function GanttApp() {
   const phases = computePhases(displayTasks)
   const phaseNames = phases.map(p => p.name)
 
-  function saveTask(f, id) {
+  function saveTask(f: GanttTask, id?: string) {
     if (id) setTasks(ts => ts.map(t => t.id === id ? { ...t, ...f } : t))
     else setTasks(ts => [...ts, { ...f, id: uid() }])
     setModal(null)
   }
-  function deleteTask(id) {
+  function deleteTask(id: string) {
     setTasks(ts => ts.filter(t => t.id !== id))
     setModal(null); setDeleteConfirm(null)
   }
 
-  const weekGroups = []
+  const weekGroups: { date: string; span: number }[] = []
   let weekCounter = 0
-  let prevMonth = null
+  let prevMonth: number | null = null
   timeline.forEach((day, i) => {
     const currentMonth = day.getMonth()
     if (day.getDay() === 1 || i === 0) {
@@ -266,7 +285,7 @@ export default function GanttApp() {
     else if (weekGroups.length) weekGroups[weekGroups.length - 1].span++
   })
 
-  const dayTD = (day, filled, isPhase) => {
+  const dayTD = (day: Date, filled: boolean, isPhase: boolean) => {
     const we = isWeekend(day)
     const isToday = toISO(day) === todayStr
     let bg = we ? C.weekendBg : C.taskRowBg
@@ -354,16 +373,15 @@ export default function GanttApp() {
                   </tr>,
 
                   ...(!isCol ? phase.tasks.map(t => (
-                    <tr key={t.id} style={{ background: C.taskRowBg }}
+                    <tr key={t.id} style={{ background: C.taskRowBg, cursor: "pointer" }}
                       onClick={() => setModal({ type: "edit", task: t })}
                       onMouseEnter={e => e.currentTarget.style.background = C.taskRowBgHover}
-                      onMouseLeave={e => e.currentTarget.style.background = C.taskRowBg}
-                      style={{ cursor: "pointer" }}>
-                      <td style={{ ...TD, paddingLeft: 24, color: C.textTertiary, textAlign: "left" }}>{t.task}</td>
+                      onMouseLeave={e => e.currentTarget.style.background = C.taskRowBg}>
+                      <td style={{ ...TD, paddingLeft: 24, color: C.textTertiary, textAlign: "left" as const }}>{t.task}</td>
                       <td style={{ ...TD, color: C.textSecondary }}>{t.lead}</td>
                       <td style={{ ...TD }}><ProgressBar value={t.progress} isDark={isDark} /></td>
                       <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(t.start)}</td>
-                      <td style={{ ...TD, color: C.textTertiary, textAlign: "center" }}>{t.days}</td>
+                      <td style={{ ...TD, color: C.textTertiary, textAlign: "center" as const }}>{t.days}</td>
                       <td style={{ ...TD, color: C.textTertiary, fontSize: 11 }}>{fmtUS(taskEnd(t))}</td>
                       {timeline.map(day => dayTD(day, dayInRange(day, t), false))}
                     </tr>
@@ -377,17 +395,17 @@ export default function GanttApp() {
 
       {modal?.type === "add" && (
         <Modal title="Tambah Task Baru" onClose={() => setModal(null)} isDark={isDark}>
-          <TaskForm phases={phaseNames} onSave={f => saveTask(f, null)} onClose={() => setModal(null)} isDark={isDark} />
+          <TaskForm phases={phaseNames} onSave={f => saveTask(f, undefined)} onClose={() => setModal(null)} isDark={isDark} />
         </Modal>
       )}
 
-      {modal?.type === "edit" && (
+      {modal?.type === "edit" && modal.task && (
         <Modal title="Edit Task" onClose={() => setModal(null)} isDark={isDark}>
           <TaskForm
             initial={modal.task}
             phases={phaseNames}
-            onSave={f => saveTask(f, modal.task.id)}
-            onDelete={() => setDeleteConfirm(modal.task.id)}
+            onSave={f => saveTask(f, modal.task!.id)}
+            onDelete={() => setDeleteConfirm(modal.task!.id)}
             onClose={() => setModal(null)}
             isDark={isDark}
           />
