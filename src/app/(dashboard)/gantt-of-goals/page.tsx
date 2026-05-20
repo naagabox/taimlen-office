@@ -78,20 +78,7 @@ function computePhases(tasks: GanttTask[]) {
   }));
 }
 
-const SAMPLE: GanttTask[] = [
-  { id: "1",  phase: "Phase 1", task: "Task 1", lead: "Ali",   progress: 100, start: "2026-04-01", days: 5 },
-  { id: "2",  phase: "Phase 1", task: "Task 2", lead: "Budi",  progress: 50,  start: "2026-04-06", days: 3 },
-  { id: "3",  phase: "Phase 1", task: "Task 3", lead: "",      progress: 0,   start: "2026-04-09", days: 1 },
-  { id: "4",  phase: "Phase 1", task: "Task 4", lead: "Citra", progress: 0,  start: "2026-04-10", days: 5 },
-  { id: "5",  phase: "Phase 2", task: "Task 1", lead: "Dito",  progress: 25,  start: "2026-04-15", days: 5 },
-  { id: "6",  phase: "Phase 2", task: "Task 2", lead: "Eka",   progress: 10,  start: "2026-04-20", days: 3 },
-  { id: "7",  phase: "Phase 2", task: "Task 3", lead: "",      progress: 0,   start: "2026-04-23", days: 2 },
-  { id: "8",  phase: "Phase 2", task: "Task 4", lead: "Fani",  progress: 0,   start: "2026-04-25", days: 5 },
-  { id: "9",  phase: "Phase 3", task: "Task 1", lead: "Gani",  progress: 20,  start: "2026-04-30", days: 3 },
-  { id: "10", phase: "Phase 3", task: "Task 2", lead: "",      progress: 0,   start: "2026-05-03", days: 2 },
-  { id: "11", phase: "Phase 3", task: "Task 3", lead: "Hani",  progress: 0,   start: "2026-05-05", days: 4 },
-  { id: "12", phase: "Phase 3", task: "Task 4", lead: "",      progress: 0,   start: "2026-05-09", days: 2 },
-];
+
 
 const DAY_W = 20
 const LEFT_COLS = [
@@ -234,7 +221,7 @@ function TaskForm({ initial, phases, onSave, onDelete, onClose }: TaskFormProps)
 
 export default function GanttApp() {
   const { theme } = useTheme()
-  const [tasks, setTasks] = useState<GanttTask[]>(SAMPLE)
+  const [tasks, setTasks] = useState<GanttTask[]>([])
   const [isMounted, setIsMounted] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [modal, setModal] = useState<{ type: string; task?: GanttTask } | null>(null)
@@ -250,7 +237,7 @@ export default function GanttApp() {
 
   useEffect(() => { try { localStorage.setItem("gantt_v2", JSON.stringify(tasks)); } catch {} }, [tasks])
 
-  const displayTasks = isMounted ? tasks : SAMPLE
+  const displayTasks = tasks
   const todayStr = toISO(new Date())
 
   const timeline = buildTimeline(displayTasks)
@@ -317,9 +304,13 @@ export default function GanttApp() {
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b shrink-0">
           <div>
             <CardTitle className="text-lg font-bold">Gantt of Goals</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {displayTasks.length} tasks · {phases.length} phases · {timeline.length} hari
-            </p>
+            {displayTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground mt-1">Belum ada project dibuat</p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1">
+                {displayTasks.length} tasks · {phases.length} phases · {timeline.length} hari
+              </p>
+            )}
           </div>
           <Button onClick={() => setModal({ type: "add" })} size="sm">
             + Tambah Task
