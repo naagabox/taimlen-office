@@ -95,7 +95,7 @@ const SAMPLE: GanttTask[] = [
 
 const DAY_W = 20
 const LEFT_COLS = [
-  { key: "task",     label: "PROJECT/TASK",     w: 180 },
+  { key: "task",     label: "PROJECT/TASK",     w: 280, maxW: 280 },
   { key: "lead",     label: "LEAD",             w: 100 },
   { key: "progress", label: "PROGRESS",         w: 120 },
   { key: "start",    label: "START",            w: 80  },
@@ -336,7 +336,7 @@ export default function GanttApp() {
             <TableHeader className="sticky top-0 z-20">
               <TableRow className="bg-primary/5">
                 {LEFT_COLS.map(c => (
-                  <TableHead key={c.key} rowSpan={3} className={`${thBaseClass} text-left`} style={{ textAlign: c.key === "task" ? "left" : "center" }}>
+                  <TableHead key={c.key} rowSpan={3} className={`${thBaseClass} text-left max-w-[280px] whitespace-normal`} style={{ textAlign: c.key === "task" ? "left" : "center" }}>
                     {c.label}
                   </TableHead>
                 ))}
@@ -387,10 +387,10 @@ export default function GanttApp() {
                 return [
                   <TableRow 
                     key={`ph-${phase.name}`}
-                    className="cursor-pointer bg-orange-50/50 dark:bg-orange-950/30 hover:bg-orange-100/50 dark:hover:bg-orange-950/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                    className="group cursor-pointer bg-orange-50/50 dark:bg-orange-950/30 hover:bg-orange-100/50 dark:hover:bg-orange-950/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                     onClick={() => setCollapsed(c => ({ ...c, [phase.name]: !c[phase.name] }))}
                   >
-                    <TableCell className="font-extrabold text-sm text-orange-600 dark:text-orange-400 text-left bg-orange-50/50 dark:bg-orange-950/30 border-l border-border">
+                    <TableCell className="font-extrabold text-sm text-orange-600 dark:text-orange-400 text-left bg-orange-50/50 dark:bg-orange-950/30 border-l border-border max-w-[280px] truncate group-hover:whitespace-normal group-hover:overflow-visible">
                       <span className={`inline-block mr-1.5 transition-transform ${isCol ? "-rotate-90" : ""}`}>▼</span>
                       {phase.name}
                     </TableCell>
@@ -405,10 +405,10 @@ export default function GanttApp() {
                   ...(!isCol ? phase.tasks.map(t => (
                     <TableRow 
                       key={t.id} 
-                      className="cursor-pointer hover:bg-muted/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
+                      className="group cursor-pointer hover:bg-muted/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                       onClick={() => setModal({ type: "edit", task: t })}
                     >
-                      <TableCell className="text-muted-foreground text-left font-medium border-l border-border">{t.task}</TableCell>
+                      <TableCell className="text-muted-foreground text-left font-medium border-l border-border max-w-[280px] truncate group-hover:whitespace-normal group-hover:overflow-visible">{t.task}</TableCell>
                       <TableCell className="text-muted-foreground">{t.lead}</TableCell>
                       <TableCell><ProgressBar value={t.progress} /></TableCell>
                       <TableCell className="text-muted-foreground text-xs">{fmtUS(t.start)}</TableCell>
