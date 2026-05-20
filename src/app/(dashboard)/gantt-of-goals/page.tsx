@@ -295,7 +295,7 @@ export default function GanttApp() {
     const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
     let bgClass = we 
       ? (isMounted && theme === "dark" ? "bg-orange-950/50" : "bg-orange-50") 
-      : "bg-background"
+      : ""
     if (filled) bgClass = isPhase ? "bg-orange-700" : "bg-orange-500"
     
     const borderClass = "border-l border-border border-r border-border"
@@ -312,8 +312,8 @@ export default function GanttApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <Card className="m-4 border-border">
+    <div className="min-h-screen font-sans">
+      <Card className="m-4 border-border flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b shrink-0">
           <div>
             <CardTitle className="text-lg font-bold">Gantt of Goals</CardTitle>
@@ -325,15 +325,15 @@ export default function GanttApp() {
             + Tambah Task
           </Button>
         </CardHeader>
-        <CardContent className="p-0 overflow-hidden">
-          <div className="overflow-x-auto">
+        <CardContent className="p-0 flex-1 overflow-hidden flex flex-col" style={{ marginTop: "-17px", marginBottom: "-17px" }}>
+          <div className="overflow-auto flex-1">
             <Table style={{ minWidth: LEFT_COLS.reduce((a, c) => a + c.w, 0) + timeline.length * DAY_W }}>
             <colgroup>
               {LEFT_COLS.map(c => <col key={c.key} style={{ width: c.w }} />)}
               {timeline.map((_, i) => <col key={i} style={{ width: DAY_W }} />)}
             </colgroup>
 
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-20">
               <TableRow className="bg-primary/5">
                 {LEFT_COLS.map(c => (
                   <TableHead key={c.key} rowSpan={3} className={`${thBaseClass} text-left`} style={{ textAlign: c.key === "task" ? "left" : "center" }}>
@@ -387,7 +387,7 @@ export default function GanttApp() {
                 return [
                   <TableRow 
                     key={`ph-${phase.name}`}
-                    className="cursor-pointer bg-orange-50/50 dark:bg-orange-950/30 hover:bg-orange-100/50 dark:hover:bg-orange-950/50"
+                    className="cursor-pointer bg-orange-50/50 dark:bg-orange-950/30 hover:bg-orange-100/50 dark:hover:bg-orange-950/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                     onClick={() => setCollapsed(c => ({ ...c, [phase.name]: !c[phase.name] }))}
                   >
                     <TableCell className="font-extrabold text-sm text-orange-600 dark:text-orange-400 text-left bg-orange-50/50 dark:bg-orange-950/30">
@@ -405,7 +405,7 @@ export default function GanttApp() {
                   ...(!isCol ? phase.tasks.map(t => (
                     <TableRow 
                       key={t.id} 
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="cursor-pointer hover:bg-muted/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                       onClick={() => setModal({ type: "edit", task: t })}
                     >
                       <TableCell className="text-muted-foreground text-left font-medium">{t.task}</TableCell>
