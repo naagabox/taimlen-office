@@ -226,7 +226,7 @@ export default function GanttApp() {
     bg: isDark ? "#0f172a" : "#F4F6F9",
     containerBg: isDark ? "#1e293b" : "#fff",
     headerBg: isDark ? "#1e293b" : "#fff",
-    thBg: isDark ? "#1e3a5f" : "#D6EEF0",
+    thBg: isDark ? "#3730a3" : "#EDE7F6",
     thText: isDark ? "#94a3b8" : "#5C7A8A",
     tdBorder: isDark ? "#334155" : "#E8EAED",
     phaseBg: isDark ? "#422006" : "#FFF8E1",
