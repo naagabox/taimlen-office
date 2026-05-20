@@ -14,7 +14,7 @@ export async function PUT(
     }
 
     const { id, taskId } = await params
-    const { title, completed, status, order, attachmentUrl } = await request.json()
+    const { title, description, completed, status, order, attachments, dueDate } = await request.json()
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -42,12 +42,53 @@ export async function PUT(
       where: { id: taskId },
       data: {
         ...(title && { title }),
+        ...(description !== undefined && { description }),
         ...(completed !== undefined && { completed }),
         ...(status && { status }),
         ...(order !== undefined && { order }),
-        ...(attachmentUrl !== undefined && { attachmentUrl }),
+        ...(attachments !== undefined && { attachments }),
+        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
       },
     })
+
+    // Log attachment changes
+    if (attachments !== undefined && existingTask) {
+      const oldAttachments: string[] = Array.isArray((existingTask as any).attachments) ? (existingTask as any).attachments : []
+      const newAttachments: string[] = Array.isArray(attachments) ? attachments : []
+      
+      const added = newAttachments.filter(url => !oldAttachments.includes(url))
+      const removed = oldAttachments.filter(url => !newAttachments.includes(url))
+      
+      for (const url of added) {
+        const fileName = url.split('/').pop() || url
+        await prisma.activityLog.create({
+          data: {
+            taskId: task.id,
+            taskTitle: task.title,
+            oldStatus: "",
+            newStatus: `ATTACHMENT_ADDED: ${fileName}`,
+            userId: session.user.id,
+            userName: session.user.name || session.user.email || "Unknown",
+            projectId: id,
+          },
+        })
+      }
+      
+      for (const url of removed) {
+        const fileName = url.split('/').pop() || url
+        await prisma.activityLog.create({
+          data: {
+            taskId: task.id,
+            taskTitle: task.title,
+            oldStatus: `ATTACHMENT_REMOVED: ${fileName}`,
+            newStatus: "",
+            userId: session.user.id,
+            userName: session.user.name || session.user.email || "Unknown",
+            projectId: id,
+          },
+        })
+      }
+    }
 
     if (status && status !== oldStatus) {
       await prisma.activityLog.create({
@@ -57,7 +98,7 @@ export async function PUT(
           oldStatus,
           newStatus: status,
           userId: session.user.id,
-          userName: session.user.name || session.user.email,
+          userName: session.user.name || session.user.email || "Unknown",
           projectId: id,
         },
       })
@@ -72,7 +113,23 @@ export async function PUT(
           oldStatus: existingTask.title,
           newStatus: "TITLE_UPDATED",
           userId: session.user.id,
-          userName: session.user.name || session.user.email,
+          userName: session.user.name || session.user.email || "Unknown",
+          projectId: id,
+        },
+      })
+    }
+
+    // Log description change
+    if (description !== undefined && existingTask && description !== existingTask.description) {
+      const isNew = !existingTask.description
+      await prisma.activityLog.create({
+        data: {
+          taskId: task.id,
+          taskTitle: task.title,
+          oldStatus: isNew ? "" : existingTask.description,
+          newStatus: isNew ? `DESCRIPTION_ADDED: ${description}` : `DESCRIPTION_UPDATED: ${description}`,
+          userId: session.user.id,
+          userName: session.user.name || session.user.email || "Unknown",
           projectId: id,
         },
       })
@@ -127,7 +184,7 @@ export async function DELETE(
         oldStatus: task.status,
         newStatus: "DELETED",
         userId: session.user.id,
-        userName: session.user.name || session.user.email,
+        userName: session.user.name || session.user.email || "Unknown",
         projectId: id,
       },
     })

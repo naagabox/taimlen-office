@@ -13,6 +13,7 @@ Timeline Office is a Next.js-based project and task management application that 
 - **Database**: MySQL with Prisma ORM
 - **Authentication**: NextAuth.js
 - **UI Components**: shadcn/ui
+- **Charts**: ApexCharts
 - **Drag & Drop**: @dnd-kit
 - **Styling**: Tailwind CSS
 
@@ -44,11 +45,32 @@ Timeline Office is a Next.js-based project and task management application that 
 - Track task status changes
 - Display activity history in project detail
 
-### 5. UI/UX
+### 5. Charts & Visualization
+
+#### Task Distribution This Week
+- Stacked horizontal bar chart using Recharts
+- Displays task distribution per day: Finished, In Progress, Todo
+
+#### Attachment Status
+- Horizontal bar chart using ApexCharts
+- Displays task count based on attachment status:
+  - **Attached**: Tasks with attachments (array length > 0)
+  - **Not Yet**: Tasks without attachments (null or empty array)
+  - **To Do**: Tasks with status NOT_STARTED
+- Chart colors:
+  - Attached: #22c55e (green)
+  - Not Yet: #94a3b8 (gray)
+  - To Do: #f59e0b (amber)
+
+### 6. UI/UX
 - Breadcrumb navigation
 - Hover-reveal action buttons on cards
 - Delete confirmation dialogs
 - Responsive design
+- Full width Projects page layout (max-w-full)
+- Project card title: max 30 characters with ellipsis (...)
+- Project card badge: flex-shrink-0 to prevent title overflow
+- Chart legend: Circle markers with proper color matching
 
 ## Database Schema
 

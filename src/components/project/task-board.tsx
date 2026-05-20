@@ -21,11 +21,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Loader2, Pencil, GripVertical, Link, ExternalLink, Trash2 } from "lucide-react"
+import { Plus, Loader2, Pencil, GripVertical, Link, ExternalLink, Trash2, X, Calendar } from "lucide-react"
 import { TaskCard } from "./task-card"
 import { TaskColumn } from "./task-column"
 import { ActivityLog } from "./activity-log"
+
+function formatCreatedAt(dateString: string): string {
+  const date = new Date(dateString)
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"]
+  const months = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ]
+  const dayName = days[date.getDay()]
+  const day = date.getDate()
+  const month = months[date.getMonth()]
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+  return `${dayName}, ${day} ${month} ${year} ${hours}:${minutes} WIB`
+}
 
 export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "FINISHED"
 
@@ -37,7 +54,8 @@ export interface Task {
   completed: boolean
   status: TaskStatus
   order: number
-  attachmentUrl: string | null
+  attachments: string[] | null
+  createdAt: string
 }
 
 interface Member {
@@ -50,7 +68,7 @@ interface Project {
   name: string
   description: string | null
   dueDate: string
-  status: "ACTIVE" | "COMPLETED" | "OVERDUE"
+  status: "ACTIVE" | "COMPLETED" | "OVERDUE" | "ARCHIVED"
   createdAt: string
   user: { name: string | null; email: string; image: string | null }
   members: Member[]
@@ -60,6 +78,7 @@ interface Project {
 interface Props {
   project: Project
   canEdit: boolean
+  onTaskUpdate?: (updatedTask: Task) => void
 }
 
 const COLUMNS: { id: TaskStatus; title: string }[] = [
@@ -68,13 +87,17 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
   { id: "FINISHED", title: "Finished" },
 ]
 
-export function TaskBoard({ project, canEdit }: Props) {
+export function TaskBoard({ project, canEdit, onTaskUpdate }: Props) {
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [extendDialogOpen, setExtendDialogOpen] = useState(false)
+  const [extendingTask, setExtendingTask] = useState<Task | null>(null)
+  const [extendDate, setExtendDate] = useState("")
   const [newTaskTitle, setNewTaskTitle] = useState("")
+  const [newAttachmentUrl, setNewAttachmentUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const activityLogRef = useRef<{ refresh: () => void }>(null)
 
@@ -86,6 +109,23 @@ export function TaskBoard({ project, canEdit }: Props) {
   useEffect(() => {
     setTasks(project.tasks.map(t => ({ ...t, status: t.status as TaskStatus })))
   }, [project.tasks])
+
+  useEffect(() => {
+    const handleOpenDialog = () => setTaskDialogOpen(true)
+    window.addEventListener('open-add-task-dialog', handleOpenDialog)
+    return () => window.removeEventListener('open-add-task-dialog', handleOpenDialog)
+  }, [])
+
+  useEffect(() => {
+    const handleOpenExtend = (e: CustomEvent) => {
+      const task = e.detail.task as Task
+      setExtendingTask(task)
+      setExtendDate(task.dueDate ? task.dueDate.split("T")[0] : "")
+      setExtendDialogOpen(true)
+    }
+    window.addEventListener('open-extend-dialog', handleOpenExtend as EventListener)
+    return () => window.removeEventListener('open-extend-dialog', handleOpenExtend as EventListener)
+  }, [])
 
   const tasksByColumn = COLUMNS.reduce((acc, col) => {
     acc[col.id] = tasks.filter((t) => t.status === col.id).sort((a, b) => a.order - b.order)
@@ -131,6 +171,10 @@ export function TaskBoard({ project, canEdit }: Props) {
           body: JSON.stringify({ status: newStatus }),
         })
         activityLogRef.current?.refresh()
+        if (onTaskUpdate) {
+          const updatedTask = { ...activeTask, status: newStatus }
+          onTaskUpdate(updatedTask)
+        }
       } catch (error) {
         console.error(error)
         setTasks((items) => {
@@ -179,7 +223,8 @@ export function TaskBoard({ project, canEdit }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           title: editingTask.title,
-          attachmentUrl: editingTask.attachmentUrl || null,
+          description: editingTask.description || null,
+          attachments: editingTask.attachments || null,
         }),
       })
       if (res.ok) {
@@ -213,6 +258,36 @@ export function TaskBoard({ project, canEdit }: Props) {
     }
   }
 
+  function handleOpenExtend(task: Task) {
+    setExtendingTask(task)
+    setExtendDate(task.dueDate ? task.dueDate.split("T")[0] : "")
+    setExtendDialogOpen(true)
+  }
+
+  async function handleExtendTime(e: React.FormEvent) {
+    e.preventDefault()
+    if (!extendingTask || !extendDate) return
+    
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/projects/${project.id}/tasks/${extendingTask.id}/extend`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: extendDate }),
+      })
+      if (res.ok) {
+        setExtendDialogOpen(false)
+        setExtendingTask(null)
+        activityLogRef.current?.refresh()
+        router.refresh()
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const activeTask = activeId ? tasks.find((t) => t.id === activeId) : null
 
   return (
@@ -234,6 +309,7 @@ export function TaskBoard({ project, canEdit }: Props) {
               onEdit={setEditingTask}
               onDelete={handleDeleteTask}
               onToggle={() => {}}
+              onExtend={handleOpenExtend}
             />
           ))}
           <DragOverlay>
@@ -245,12 +321,6 @@ export function TaskBoard({ project, canEdit }: Props) {
           </DragOverlay>
         </DndContext>
       </div>
-
-      {canEdit && (
-        <Button variant="outline" className="w-full" onClick={() => setTaskDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />Add Task
-        </Button>
-      )}
 
       <ActivityLog ref={activityLogRef} projectId={project.id} />
 
@@ -278,10 +348,15 @@ export function TaskBoard({ project, canEdit }: Props) {
       </Dialog>
 
       <Dialog open={!!editingTask} onOpenChange={(open) => !open && setEditingTask(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
+          {editingTask?.createdAt && (
+            <p className="text-sm text-muted-foreground">
+              Dibuat: {formatCreatedAt(editingTask.createdAt)}
+            </p>
+          )}
           <form onSubmit={handleEditTask} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="editTaskTitle">Task Title</Label>
@@ -292,33 +367,124 @@ export function TaskBoard({ project, canEdit }: Props) {
                 placeholder="Enter task title"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="editTaskDescription">Description</Label>
+              <Textarea
+                id="editTaskDescription"
+                value={editingTask?.description || ""}
+                onChange={(e) => editingTask && setEditingTask({...editingTask, description: e.target.value})}
+                placeholder="Enter task description"
+                rows={3}
+              />
+            </div>
             {editingTask?.status === "FINISHED" && (
               <div className="space-y-2">
-                <Label htmlFor="editAttachmentUrl">Attachment URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="editAttachmentUrl"
-                    value={editingTask?.attachmentUrl || ""}
-                    onChange={(e) => editingTask && setEditingTask({...editingTask, attachmentUrl: e.target.value})}
-                    placeholder="https://..."
-                    className="flex-1"
-                  />
-                  {editingTask?.attachmentUrl && (
-                    <a
-                      href={editingTask.attachmentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                <Label>Attachments</Label>
+                <div className="space-y-2">
+                  {editingTask?.attachments?.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-500 hover:text-blue-600 break-all"
+                      >
+                        {url}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-600 shrink-0"
+                        onClick={() => {
+                          if (editingTask) {
+                            const newAttachments = editingTask.attachments?.filter((_, i) => i !== index) || []
+                            setEditingTask({ ...editingTask, attachments: newAttachments })
+                          }
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newAttachmentUrl}
+                      onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                      placeholder="Add attachment URL..."
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          if (newAttachmentUrl.trim() && editingTask) {
+                            const updatedAttachments = [...(editingTask.attachments || []), newAttachmentUrl.trim()]
+                            setEditingTask({ ...editingTask, attachments: updatedAttachments })
+                            setNewAttachmentUrl("")
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (newAttachmentUrl.trim() && editingTask) {
+                          const updatedAttachments = [...(editingTask.attachments || []), newAttachmentUrl.trim()]
+                          setEditingTask({ ...editingTask, attachments: updatedAttachments })
+                          setNewAttachmentUrl("")
+                        }
+                      }}
+                      disabled={!newAttachmentUrl.trim()}
                     >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
             <Button type="submit" disabled={loading} className="w-full">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={extendDialogOpen} onOpenChange={setExtendDialogOpen}>
+        <DialogContent className="max-w-md w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Extend Time
+            </DialogTitle>
+          </DialogHeader>
+          {extendingTask && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Task: <span className="font-medium text-foreground">{extendingTask.title}</span>
+              </p>
+              {extendingTask.dueDate && (
+                <p className="text-xs text-muted-foreground mb-4">
+                  Current due date: {new Date(extendingTask.dueDate).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                </p>
+              )}
+            </div>
+          )}
+          <form onSubmit={handleExtendTime} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="extendDate">New Due Date</Label>
+              <Input
+                id="extendDate"
+                type="date"
+                value={extendDate}
+                onChange={(e) => setExtendDate(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Extend Time
             </Button>
           </form>
         </DialogContent>

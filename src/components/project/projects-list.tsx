@@ -1,35 +1,55 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense, use } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Plus, Calendar, ArrowRight, Pencil, Trash2, Loader2 } from "lucide-react"
+import { ChartsSection } from "./charts-section"
 
 interface Project {
   id: string
   name: string
   description: string | null
   dueDate: string
-  status: "ACTIVE" | "COMPLETED" | "OVERDUE"
+  status: "ACTIVE" | "COMPLETED" | "OVERDUE" | "ARCHIVED"
   createdAt: string
   user: { name: string | null; email: string }
   members: { user: { name: string | null; email: string } }[]
-  _count: { tasks: number }
+  _count: { tasks: number; tasksFinished: number }
   currentUserRole: "OWNER" | "EDITOR" | "VIEWER" | null
   canEdit: boolean
   isOwnerOnly: boolean
 }
 
+interface BarChartData {
+  day: string
+  date: number
+  finished: number
+  inProgress: number
+  todo: number
+}
+
+interface PieChartData {
+  name: string
+  value: number
+  fill: string
+}
+
 interface Props {
   projects: Project[]
+  barChartData: BarChartData[]
+  pieChartData: PieChartData[]
+  monthYear?: string
+  searchParams: Promise<{ edit?: string; delete?: string }>
 }
 
 function getStatusColor(status: string) {
@@ -53,20 +73,22 @@ function getDaysRemaining(dueDate: string) {
   return days
 }
 
-export function ProjectsList({ projects }: Props) {
+function ProjectsListInner({ projects, barChartData, pieChartData, monthYear, searchParams: searchParamsProp }: Props) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = use(searchParamsProp)
   const activeProjects = projects.filter((p) => p.status === "ACTIVE")
   const completedProjects = projects.filter((p) => p.status === "COMPLETED")
   const overdueProjects = projects.filter((p) => p.status === "OVERDUE")
+  const archivedProjects = projects.filter((p) => p.status === "ARCHIVED")
 
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [deletingProject, setDeletingProject] = useState<Project | null>(null)
+  const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const editId = searchParams.get("edit")
-    const deleteId = searchParams.get("delete")
+    const editId = searchParams?.edit
+    const deleteId = searchParams?.delete
     
     if (editId) {
       const project = projects.find((p) => p.id === editId)
@@ -112,6 +134,33 @@ export function ProjectsList({ projects }: Props) {
     }
   }
 
+  async function handleCreateProject(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get("name") as string
+    const description = formData.get("description") as string
+    const dueDate = formData.get("dueDate") as string
+
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, dueDate }),
+      })
+
+      if (res.ok) {
+        setIsCreatingProject(false)
+        router.refresh()
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleDeleteProject() {
     if (!deletingProject) return
     
@@ -132,73 +181,115 @@ export function ProjectsList({ projects }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-full px-6 py-8 -mt-5">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="mt-1 text-gray-600">Manage and track your projects</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PDCA Board</h1>
+          <p className="mt-1 text-gray-600 dark:text-gray-300">Manage and track your projects</p>
         </div>
-        <Link href="/projects/new">
-          <Button>
+        <Button onClick={() => setIsCreatingProject(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
-        </Link>
       </div>
+
+      {projects.length > 0 && (
+        <div className="mb-8">
+          <ChartsSection barChartData={barChartData} pieChartData={pieChartData} monthYear={monthYear} />
+        </div>
+      )}
 
       {projects.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-500">No projects yet. Create your first project!</p>
-            <Link href="/projects/new">
-              <Button className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Project
-              </Button>
-            </Link>
+            <p className="text-gray-500 dark:text-gray-400">No projects yet. Create your first project!</p>
+            <Button className="mt-4" onClick={() => setIsCreatingProject(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Project
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          {overdueProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-red-600">
-                Overdue ({overdueProjects.length})
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {overdueProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            </div>
-          )}
+        <Tabs defaultValue="active" className="space-y-6">
+          <TabsList variant="line">
+            <TabsTrigger value="active">
+              Active ({activeProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="overdue">
+              Overdue ({overdueProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="finish">
+              Finish ({completedProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="archive">
+              Archive ({archivedProjects.length})
+            </TabsTrigger>
+          </TabsList>
 
-          {activeProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                Active ({activeProjects.length})
-              </h2>
+          <TabsContent value="active">
+            {activeProjects.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {activeProjects.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No active projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-          {completedProjects.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-green-600">
-                Completed ({completedProjects.length})
-              </h2>
+          <TabsContent value="overdue">
+            {overdueProjects.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {overdueProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No overdue projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="finish">
+            {completedProjects.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {completedProjects.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No completed projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="archive">
+            {archivedProjects.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {archivedProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">No archived projects</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
       <Dialog open={!!editingProject} onOpenChange={(open: boolean) => { if (!open) { setEditingProject(null); clearParams() } }}>
@@ -228,6 +319,48 @@ export function ProjectsList({ projects }: Props) {
             <Button type="submit" disabled={loading} className="w-full">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreatingProject} onOpenChange={(open) => !open && setIsCreatingProject(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateProject} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newProjectName">Project Name</Label>
+              <Input
+                id="newProjectName"
+                name="name"
+                type="text"
+                required
+                placeholder="Enter project name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newProjectDesc">Description</Label>
+              <Input
+                id="newProjectDesc"
+                name="description"
+                type="text"
+                placeholder="Enter description (optional)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newProjectDueDate">Due Date</Label>
+              <Input
+                id="newProjectDueDate"
+                name="dueDate"
+                type="date"
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Project
             </Button>
           </form>
         </DialogContent>
@@ -269,7 +402,9 @@ function ProjectCard({ project }: { project: Project }) {
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg pr-2">{project.name}</CardTitle>
+            <CardTitle className="text-lg pr-2 truncate">
+              {project.name.length > 30 ? project.name.slice(0, 30) + "..." : project.name}
+            </CardTitle>
             <div className="flex items-center gap-1 flex-shrink-0">
               {project.canEdit && showActions && (
                 <Button
@@ -299,33 +434,53 @@ function ProjectCard({ project }: { project: Project }) {
                   <Trash2 className="h-3 w-3" />
                 </Button>
               )}
-              <Badge className={getStatusColor(project.status)}>
-                {project.status}
-              </Badge>
+              
             </div>
           </div>
           <CardDescription className="line-clamp-2">
-            {project.description || "No description"}
+            {project.description 
+              ? (project.description.length > 30 ? project.description.slice(0, 30) + "..." : project.description)
+              : "No description"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               <span>{format(new Date(project.dueDate), "MMM d, yyyy")}</span>
             </div>
-            {project.status === "ACTIVE" && (
-              <span className={isUrgent ? "text-red-500 font-medium" : ""}>
-                {daysLeft > 0 ? `${daysLeft} days left` : "Due today"}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {project.status === "OVERDUE" && (
+                <Badge className="bg-red-500 text-white">OVERDUE</Badge>
+              )}
+              {project.status === "ACTIVE" && (
+                <>
+                  <span className={isUrgent ? "text-red-500 font-medium" : ""}>
+                    {daysLeft > 0 ? `${daysLeft} days left` : "Due today"}
+                  </span>
+                  <Badge className="bg-blue-500 text-white">ACTIVE</Badge>
+                </>
+              )}
+            </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>{project._count.tasks} tasks</span>
+          <div className="mt-4 flex items-center text-sm text-gray-500 dark:text-gray-400">
+            {project._count.tasks === 0 ? (
+                <span>0 task</span>
+              ) : (
+                <span>{`${project._count.tasksFinished ?? 0}/${project._count.tasks} task (${project._count.tasksFinished ?? 0} finished, ${project._count.tasks} total)`}</span>
+              )}
             <ArrowRight className="ml-auto h-4 w-4" />
           </div>
         </CardContent>
       </Card>
     </Link>
+  )
+}
+
+export function ProjectsList(props: Props) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+      <ProjectsListInner {...props} />
+    </Suspense>
   )
 }

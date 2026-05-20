@@ -26,10 +26,10 @@ function getStatusColor(statusId: string) {
 
 function getHeaderColor(statusId: string) {
   switch (statusId) {
-    case "NOT_STARTED": return "text-amber-600"
-    case "IN_PROGRESS": return "text-blue-600"
-    case "FINISHED": return "text-green-600"
-    default: return "text-gray-600"
+    case "NOT_STARTED": return "text-amber-600 dark:text-amber-400"
+    case "IN_PROGRESS": return "text-blue-600 dark:text-blue-400"
+    case "FINISHED": return "text-green-600 dark:text-green-400"
+    default: return "text-gray-600 dark:text-gray-400"
   }
 }
 
@@ -41,9 +41,10 @@ interface TaskColumnProps {
   onEdit: (task: Task) => void
   onDelete: (taskId: string) => void
   onToggle: (taskId: string, completed: boolean) => void
+  onExtend: (task: Task) => void
 }
 
-export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onToggle }: TaskColumnProps) {
+export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onToggle, onExtend }: TaskColumnProps) {
   const columnIds = COLUMNS.map(col => col.id)
   const isColumn = columnIds.includes(id)
   
@@ -56,12 +57,12 @@ export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onTogg
       <CardHeader className="pb-3">
         <CardTitle className={`text-base font-semibold flex items-center justify-between ${getHeaderColor(id)}`}>
           {title}
-          <span className="text-sm font-normal text-gray-500 ml-2">({tasks.length})</span>
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">({tasks.length})</span>
         </CardTitle>
       </CardHeader>
       <CardContent
         ref={setNodeRef}
-        className={`min-h-[200px] space-y-2 ${isOver ? "bg-gray-50" : ""}`}
+        className={`min-h-[200px] space-y-2 ${isOver ? "bg-gray-50 dark:bg-gray-800" : ""}`}
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
@@ -73,11 +74,12 @@ export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onTogg
               onEdit={onEdit}
               onDelete={onDelete}
               onToggle={onToggle}
+              onExtend={onExtend}
             />
           ))}
         </SortableContext>
         {tasks.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-4">No tasks</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No tasks</p>
         )}
       </CardContent>
     </Card>
