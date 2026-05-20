@@ -44,12 +44,12 @@ function dayInRange(day: Date, t: GanttTask): boolean {
 
 function buildTimeline(tasks: GanttTask[]): Date[] {
   const today = new Date();
-  const todayPlus20 = addDays(today, 20);
+  const todayPlus7 = addDays(today, 7);
 
   if (!tasks.length) {
     const days: Date[] = [];
     let cur = new Date(today);
-    while (cur <= todayPlus20) { days.push(new Date(cur)); cur = addDays(cur, 1); }
+    while (cur <= todayPlus7) { days.push(new Date(cur)); cur = addDays(cur, 1); }
     return days;
   }
 
@@ -58,7 +58,7 @@ function buildTimeline(tasks: GanttTask[]): Date[] {
 
   const maxDate = parseDate(max);
 
-  if (todayPlus20 > maxDate) max = toISO(todayPlus20);
+  if (todayPlus7 > maxDate) max = toISO(todayPlus7);
 
   const days: Date[] = [];
   let cur = parseDate(min);
@@ -290,8 +290,12 @@ export default function GanttApp() {
     return (
       <td 
         key={day.toISOString()} 
-        className={`w-5 min-w-5 max-w-5 p-0 ${bgClass} ${borderClass} relative`}
-        style={{ height: isPhase ? 28 : 32 }}
+        className={`p-0 ${bgClass} ${borderClass} relative`}
+        style={{ 
+          width: DAY_W, 
+          minWidth: DAY_W, 
+          height: isPhase ? 28 : 32 
+        }}
       >
         {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
       </td>
@@ -332,7 +336,7 @@ export default function GanttApp() {
                   </TableHead>
                 ))}
                 {weekGroups.map((wg, i) => (
-                  <TableHead key={i} colSpan={wg.span} className={`${thBaseClass}`}>
+                  <TableHead key={i} colSpan={wg.span} className={`${thBaseClass}`} style={{ width: wg.span * DAY_W, minWidth: wg.span * DAY_W }}>
                     {wg.date}
                   </TableHead>
                 ))}
@@ -346,8 +350,10 @@ export default function GanttApp() {
                   return (
                   <TableHead 
                     key={day.toISOString()} 
-                    className={`${thBaseClass} p-0.5 text-[10px] w-5 relative`}
+                    className={`${thBaseClass} p-0.5 text-[10px] relative`}
                     style={{ 
+                      width: DAY_W,
+                      minWidth: DAY_W,
                       background: isWeekend(day) 
                         ? (isMounted && theme === "dark" ? "#451a03" : "#FFF3E0") 
                         : undefined
@@ -367,8 +373,10 @@ export default function GanttApp() {
                   return (
                   <TableHead 
                     key={day.toISOString()} 
-                    className={`${thBaseClass} p-0.5 text-[10px] w-5 relative`}
+                    className={`${thBaseClass} p-0.5 text-[10px] relative`}
                     style={{ 
+                      width: DAY_W,
+                      minWidth: DAY_W,
                       background: isWeekend(day) 
                         ? (isMounted && theme === "dark" ? "#451a03" : "#FFF3E0") 
                         : undefined
