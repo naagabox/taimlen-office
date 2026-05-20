@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Providers } from "@/components/providers"
@@ -13,6 +13,18 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sidebar_open")
+      if (saved === "true") setSidebarOpen(true)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try { localStorage.setItem("sidebar_open", String(sidebarOpen)) }
+    catch {}
+  }, [sidebarOpen])
 
   return (
     <Providers>
