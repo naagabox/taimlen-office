@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Check, Copy, ExternalLink, GripVertical, Pencil, Trash2 } from "lucide-react"
+import { Check, Copy, ExternalLink, GripVertical, Pencil, Trash2, Clock } from "lucide-react"
 import { Task } from "./task-board"
 
 interface TaskCardProps {
@@ -14,6 +14,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void
   onDelete: (taskId: string) => void
   onToggle: (taskId: string, completed: boolean) => void
+  onExtend: (task: Task) => void
 }
 
 function getCardColor(statusId: string) {
@@ -25,7 +26,7 @@ function getCardColor(statusId: string) {
   }
 }
 
-export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, statusId, canEdit, onEdit, onDelete, onExtend }: TaskCardProps) {
   const [copied, setCopied] = useState(false)
 
   const {
@@ -95,6 +96,17 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
         )}
         {canEdit && (
           <div className="flex gap-1">
+            {statusId !== "FINISHED" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-blue-500 hover:text-blue-600"
+                onClick={() => onExtend(task)}
+                title="Extend Time"
+              >
+                <Clock className="h-3 w-3" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
