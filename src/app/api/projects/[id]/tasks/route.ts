@@ -60,7 +60,12 @@ export async function POST(
       },
     })
 
-    return NextResponse.json(task)
+    return NextResponse.json({
+      ...task,
+      dueDate: task.dueDate?.toISOString() || null,
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+    })
   } catch (error) {
     console.error("Create task error:", error)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })

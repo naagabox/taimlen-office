@@ -201,6 +201,9 @@ export function TaskBoard({ project, canEdit, onTaskUpdate }: Props) {
         body: JSON.stringify({ title: newTaskTitle }),
       })
       if (res.ok) {
+        const newTask = await res.json()
+        setTasks((prev) => [...prev, { ...newTask, status: newTask.status as TaskStatus }])
+        activityLogRef.current?.refresh()
         setNewTaskTitle("")
         setTaskDialogOpen(false)
         router.refresh()
