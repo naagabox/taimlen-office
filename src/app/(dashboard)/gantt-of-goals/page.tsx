@@ -390,7 +390,7 @@ export default function GanttApp() {
                     className="cursor-pointer bg-orange-50/50 dark:bg-orange-950/30 hover:bg-orange-100/50 dark:hover:bg-orange-950/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                     onClick={() => setCollapsed(c => ({ ...c, [phase.name]: !c[phase.name] }))}
                   >
-                    <TableCell className="font-extrabold text-sm text-orange-600 dark:text-orange-400 text-left bg-orange-50/50 dark:bg-orange-950/30">
+                    <TableCell className="font-extrabold text-sm text-orange-600 dark:text-orange-400 text-left bg-orange-50/50 dark:bg-orange-950/30 border-l border-border">
                       <span className={`inline-block mr-1.5 transition-transform ${isCol ? "-rotate-90" : ""}`}>▼</span>
                       {phase.name}
                     </TableCell>
@@ -408,7 +408,7 @@ export default function GanttApp() {
                       className="cursor-pointer hover:bg-muted/50 [&amp;_td:first-child]:sticky [&amp;_td:first-child]:left-0 [&amp;_td:first-child]:z-10 [&amp;_td:first-child]:shadow-[2px_0_4px_rgba(0,0,0,0.1)]"
                       onClick={() => setModal({ type: "edit", task: t })}
                     >
-                      <TableCell className="text-muted-foreground text-left font-medium">{t.task}</TableCell>
+                      <TableCell className="text-muted-foreground text-left font-medium border-l border-border">{t.task}</TableCell>
                       <TableCell className="text-muted-foreground">{t.lead}</TableCell>
                       <TableCell><ProgressBar value={t.progress} /></TableCell>
                       <TableCell className="text-muted-foreground text-xs">{fmtUS(t.start)}</TableCell>
