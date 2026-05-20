@@ -41,9 +41,10 @@ interface TaskColumnProps {
   onEdit: (task: Task) => void
   onDelete: (taskId: string) => void
   onToggle: (taskId: string, completed: boolean) => void
+  onExtend: (task: Task) => void
 }
 
-export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onToggle }: TaskColumnProps) {
+export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onToggle, onExtend }: TaskColumnProps) {
   const columnIds = COLUMNS.map(col => col.id)
   const isColumn = columnIds.includes(id)
   
@@ -73,6 +74,7 @@ export function TaskColumn({ id, title, tasks, canEdit, onEdit, onDelete, onTogg
               onEdit={onEdit}
               onDelete={onDelete}
               onToggle={onToggle}
+              onExtend={onExtend}
             />
           ))}
         </SortableContext>
