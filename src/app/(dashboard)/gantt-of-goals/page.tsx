@@ -347,10 +347,15 @@ export default function GanttApp() {
                 ))}
               </TableRow>
 <TableRow className="bg-primary/5">
-                {timeline.map(day => (
+                {timeline.map(day => {
+                  const dayDate = parseDate(toISO(day))
+                  const todayDate = parseDate(todayStr)
+                  const dayBeforeToday = addDays(todayDate, -1)
+                  const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
+                  return (
                   <TableHead 
                     key={day.toISOString()} 
-                    className={`${thBaseClass} p-0.5 text-[10px] w-5`}
+                    className={`${thBaseClass} p-0.5 text-[10px] w-5 relative`}
                     style={{ 
                       background: isWeekend(day) 
                         ? (isMounted && theme === "dark" ? "#451a03" : "#FFF3E0") 
@@ -358,14 +363,20 @@ export default function GanttApp() {
                     }}
                   >
                     {DAY_LETTER[day.getDay()]}
+                    {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
                   </TableHead>
-                ))}
+                )})}
               </TableRow>
 <TableRow className="bg-primary/5">
-                {timeline.map(day => (
+                {timeline.map(day => {
+                  const dayDate = parseDate(toISO(day))
+                  const todayDate = parseDate(todayStr)
+                  const dayBeforeToday = addDays(todayDate, -1)
+                  const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
+                  return (
                   <TableHead 
                     key={day.toISOString()} 
-                    className={`${thBaseClass} p-0.5 text-[10px] w-5`}
+                    className={`${thBaseClass} p-0.5 text-[10px] w-5 relative`}
                     style={{ 
                       background: isWeekend(day) 
                         ? (isMounted && theme === "dark" ? "#451a03" : "#FFF3E0") 
@@ -373,8 +384,9 @@ export default function GanttApp() {
                     }}
                   >
                     {day.getDate()}
+                    {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
                   </TableHead>
-                ))}
+                )})}
               </TableRow>
             </TableHeader>
 
