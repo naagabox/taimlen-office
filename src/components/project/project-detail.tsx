@@ -20,6 +20,9 @@ interface Task {
   status: "NOT_STARTED" | "IN_PROGRESS" | "FINISHED"
   order: number
   attachments: string[] | null
+  startDate: string | null
+  durationDays: number | null
+  leadName: string | null
   createdAt: string
 }
 

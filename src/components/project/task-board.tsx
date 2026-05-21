@@ -55,6 +55,9 @@ export interface Task {
   status: TaskStatus
   order: number
   attachments: string[] | null
+  startDate: string | null
+  durationDays: number | null
+  leadName: string | null
   createdAt: string
 }
 

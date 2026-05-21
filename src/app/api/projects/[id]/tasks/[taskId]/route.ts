@@ -14,7 +14,7 @@ export async function PUT(
     }
 
     const { id, taskId } = await params
-    const { title, description, completed, status, order, attachments, dueDate } = await request.json()
+    const { title, description, completed, status, order, attachments, dueDate, startDate, durationDays, leadName } = await request.json()
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -48,6 +48,9 @@ export async function PUT(
         ...(order !== undefined && { order }),
         ...(attachments !== undefined && { attachments }),
         ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+        ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
+        ...(durationDays !== undefined && { durationDays: durationDays ? parseInt(durationDays) : null }),
+        ...(leadName !== undefined && { leadName }),
       },
     })
 
