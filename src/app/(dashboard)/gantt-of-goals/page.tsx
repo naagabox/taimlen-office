@@ -167,7 +167,11 @@ export default function GanttApp() {
   }, [modal, fetchProjects])
 
   const displayTasks = tasks
-  const todayStr = toISO(new Date())
+  const [todayStr, setTodayStr] = useState(() => toISO(new Date()))
+  useEffect(() => {
+    const id = setInterval(() => setTodayStr(toISO(new Date())), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const timeline = buildTimeline(displayTasks)
   const phases = computePhases(displayTasks)
@@ -243,8 +247,7 @@ export default function GanttApp() {
     const we = isWeekend(day)
     const dayDate = parseDate(toISO(day))
     const todayDate = parseDate(todayStr)
-    const dayBeforeToday = addDays(todayDate, -1)
-    const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
+    const isToday = toISO(dayDate) === toISO(todayDate)
     let bgClass = we
       ? (isMounted && theme === "dark" ? "bg-orange-950/50" : "bg-orange-50")
       : ""
@@ -262,7 +265,7 @@ export default function GanttApp() {
           height: isPhase ? 28 : 32
         }}
       >
-        {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
+        {isToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
       </td>
     )
   }
@@ -312,8 +315,7 @@ export default function GanttApp() {
                 {timeline.map(day => {
                   const dayDate = parseDate(toISO(day))
                   const todayDate = parseDate(todayStr)
-                  const dayBeforeToday = addDays(todayDate, -1)
-                  const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
+                  const isToday = toISO(dayDate) === toISO(todayDate)
                   return (
                   <TableHead
                     key={day.toISOString()}
@@ -327,7 +329,7 @@ export default function GanttApp() {
                     }}
                   >
                     {DAY_LETTER[day.getDay()]}
-                    {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
+                    {isToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
                   </TableHead>
                 )})}
               </TableRow>
@@ -335,8 +337,7 @@ export default function GanttApp() {
                 {timeline.map(day => {
                   const dayDate = parseDate(toISO(day))
                   const todayDate = parseDate(todayStr)
-                  const dayBeforeToday = addDays(todayDate, -1)
-                  const isDayBeforeToday = toISO(dayDate) === toISO(dayBeforeToday)
+                  const isToday = toISO(dayDate) === toISO(todayDate)
                   return (
                   <TableHead
                     key={day.toISOString()}
@@ -350,7 +351,7 @@ export default function GanttApp() {
                     }}
                   >
                     {day.getDate()}
-                    {isDayBeforeToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
+                    {isToday && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500 z-10" />}
                   </TableHead>
                 )})}
               </TableRow>
@@ -487,7 +488,7 @@ function AddTaskForm({
       <div className="space-y-2">
         <Label htmlFor="project">Project / Phase</Label>
         <Select value={f.projectId} onValueChange={v => set("projectId", v ?? "")}>
-          <SelectTrigger id="project">
+          <SelectTrigger id="project" className="w-full">
             <SelectValue placeholder="Pilih project" />
           </SelectTrigger>
           <SelectContent>
