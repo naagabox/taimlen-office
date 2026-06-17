@@ -2,8 +2,9 @@
 
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, GripVertical, Pencil, Trash2 } from "lucide-react"
+import { Check, Copy, ExternalLink, GripVertical, Pencil, Trash2, Clock } from "lucide-react"
 import { Task } from "./task-board"
 
 interface TaskCardProps {
@@ -13,6 +14,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void
   onDelete: (taskId: string) => void
   onToggle: (taskId: string, completed: boolean) => void
+  onExtend: (task: Task) => void
 }
 
 function getCardColor(statusId: string) {
@@ -24,7 +26,9 @@ function getCardColor(statusId: string) {
   }
 }
 
-export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, statusId, canEdit, onEdit, onDelete, onExtend }: TaskCardProps) {
+  const [copied, setCopied] = useState(false)
+
   const {
     attributes,
     listeners,
@@ -39,11 +43,19 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
     transition,
   }
 
+  const attachmentCount = task.attachments?.length || 0
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(task.title)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-lg border p-3 shadow-sm border-l-4 ${getCardColor(statusId)} ${
+      className={`bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-3 shadow-sm border-l-4 ${getCardColor(statusId)} ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -55,20 +67,46 @@ export function TaskCard({ task, statusId, canEdit, onEdit, onDelete }: TaskCard
         >
           <GripVertical className="h-4 w-4 text-gray-400" />
         </div>
-        <span className="flex-1 text-sm">{task.title}</span>
-        {task.attachmentUrl && (
-          <a
-            href={task.attachmentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3 w-3" />
-          </a>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+          onClick={handleCopy}
+          title="Copy title"
+        >
+          {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+        </Button>
+        <span className="flex-1 text-sm text-gray-900 dark:text-white">{task.title}</span>
+        {attachmentCount > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-500">{attachmentCount}</span>
+            <a
+              href={task.attachments?.[0]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            {attachmentCount > 1 && (
+              <span className="text-xs text-gray-400">+{attachmentCount - 1}</span>
+            )}
+          </div>
         )}
         {canEdit && (
           <div className="flex gap-1">
+            {statusId !== "FINISHED" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-blue-500 hover:text-blue-600"
+                onClick={() => onExtend(task)}
+                title="Extend Time"
+              >
+                <Clock className="h-3 w-3" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

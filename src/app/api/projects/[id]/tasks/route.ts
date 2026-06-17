@@ -14,7 +14,7 @@ export async function POST(
     }
 
     const { id } = await params
-    const { title, description, dueDate } = await request.json()
+    const { title, description, dueDate, startDate, durationDays, leadName } = await request.json()
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
@@ -43,6 +43,9 @@ export async function POST(
         title,
         description,
         dueDate: dueDate ? new Date(dueDate) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        durationDays: durationDays ? parseInt(durationDays) : null,
+        leadName,
         status: "NOT_STARTED",
         order: 0,
       },
@@ -55,12 +58,18 @@ export async function POST(
         oldStatus: null,
         newStatus: "NOT_STARTED",
         userId: session.user.id,
-        userName: session.user.name || session.user.email,
+        userName: session.user.name || session.user.email || "Unknown",
         projectId: id,
       },
     })
 
-    return NextResponse.json(task)
+    return NextResponse.json({
+      ...task,
+      dueDate: task.dueDate?.toISOString() || null,
+      startDate: task.startDate?.toISOString() || null,
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+    })
   } catch (error) {
     console.error("Create task error:", error)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })

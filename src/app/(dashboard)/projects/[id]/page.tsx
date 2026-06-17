@@ -37,15 +37,23 @@ export default async function ProjectPage({ params }: Props) {
     ...project,
     dueDate: project.dueDate.toISOString(),
     createdAt: project.createdAt.toISOString(),
-    tasks: project.tasks.map((task) => ({
-      ...task,
-      status: task.status,
-      order: task.order,
-      dueDate: task.dueDate?.toISOString() || null,
-      attachmentUrl: task.attachmentUrl,
-      createdAt: task.createdAt.toISOString(),
-      updatedAt: task.updatedAt.toISOString(),
-    })),
+    tasks: project.tasks.map((task: any) => {
+      let attachments: string[] | null = null
+      if (task.attachments && Array.isArray(task.attachments)) {
+        attachments = task.attachments as string[]
+      } else if (task.attachmentUrl) {
+        attachments = [task.attachmentUrl]
+      }
+      return {
+        ...task,
+        status: task.status,
+        order: task.order,
+        dueDate: task.dueDate?.toISOString() || null,
+        attachments,
+        createdAt: task.createdAt.toISOString(),
+        updatedAt: task.updatedAt.toISOString(),
+      }
+    }),
   }
 
   const isOwner = project.userId === session.user.id

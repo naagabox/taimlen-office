@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
@@ -20,6 +21,8 @@ model User {
   projectMembers ProjectMember[]
   accounts      Account[]
   sessions      Session[]
+
+  @@map("tbl_user")
 }
 
 model Account {
@@ -39,6 +42,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("tbl_account")
 }
 
 model Session {
@@ -47,6 +51,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tbl_session")
 }
 
 model VerificationToken {
@@ -55,6 +61,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("tbl_verification_token")
 }
 
 model Project {
@@ -71,6 +78,8 @@ model Project {
   members    ProjectMember[]
   tasks      Task[]
   activities ActivityLog[]
+
+  @@map("tbl_project")
 }
 
 model ProjectMember {
@@ -84,6 +93,7 @@ model ProjectMember {
   userId    String
 
   @@unique([projectId, userId])
+  @@map("tbl_project_member")
 }
 
 model Task {
@@ -94,12 +104,17 @@ model Task {
   completed   Boolean  @default(false)
   status       TaskStatus @default(NOT_STARTED)
   order       Int       @default(0)
-  attachmentUrl String?
+  attachments    Json?
+  startDate    DateTime?
+  durationDays Int?
+  leadName     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
+
+  @@map("tbl_task")
 }
 
 model ActivityLog {
@@ -114,12 +129,15 @@ model ActivityLog {
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
+
+  @@map("tbl_activity_log")
 }
 
 enum ProjectStatus {
   ACTIVE
   COMPLETED
   OVERDUE
+  ARCHIVED
 }
 
 enum ProjectRole {

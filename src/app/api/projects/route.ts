@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { TaskStatus } from "@prisma/client"
 
 export async function POST(request: Request) {
   try {
@@ -57,12 +58,33 @@ export async function GET() {
       include: {
         user: { select: { name: true, email: true } },
         members: { include: { user: { select: { name: true, email: true } } } },
+        tasks: { 
+          select: { 
+            id: true,
+            title: true,
+            description: true,
+            dueDate: true,
+            status: true,
+            completed: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        },
         _count: { select: { tasks: true } },
       },
       orderBy: { dueDate: "asc" },
     })
 
-    return NextResponse.json(projects)
+    const projectsWithTaskCounts = projects.map(project => ({
+      ...project,
+      tasks: undefined,
+      _count: {
+        tasks: project._count.tasks,
+        tasksFinished: project.tasks.filter(t => t.status === TaskStatus.FINISHED).length,
+      },
+    }))
+
+    return NextResponse.json(projectsWithTaskCounts)
   } catch (error) {
     console.error("Get projects error:", error)
     return NextResponse.json(
